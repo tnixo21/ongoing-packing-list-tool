@@ -133,26 +133,9 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
   <p>Any packing list (Excel or PDF) &rarr; Ongoing WMS Purchase Order (inbound) or Order (outbound) &mdash; with direct API upload.</p>
 </div>
 
-<!-- Step 1: Upload -->
-<div class="card">
-  <div class="card-title"><div class="step-num">1</div> Upload Packing List(s)</div>
-  <div class="dz" id="src-dz" onclick="document.getElementById('src-input').click()">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-    <p class="primary">Drop Excel or PDF files here, or click to browse</p>
-    <p class="secondary">Multiple files &middot; .xlsx .xls .xlsm .pdf &mdash; any supplier packing list format</p>
-  </div>
-  <input type="file" id="src-input" accept=".xlsx,.xls,.xlsm,.pdf" multiple style="display:none">
-  <div class="file-list" id="file-list"></div>
-</div>
-
-<!-- Extract button -->
-<button class="btn-primary" id="extract-btn" onclick="runExtract()" style="display:none">
-  Extract &amp; Preview &rarr;
-</button>
-
-<!-- Step 2: Configure -->
-<div class="card" id="cfg-card" style="display:none">
-  <div class="card-title"><div class="step-num">2</div> Configure</div>
+<!-- Step 1: Configure -->
+<div class="card" id="cfg-card">
+  <div class="card-title"><div class="step-num">1</div> Configure</div>
 
   <!-- Goods Owner -->
   <div class="go-row">
@@ -160,7 +143,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
       <label>Goods Owner</label>
       <select id="cfg-go"></select>
     </div>
-    <button class="btn-sm" onclick="refreshGoodsOwners()" id="btn-go-refresh" title="Load live list from Ongoing API">&circlearrowleft; Refresh</button>
+    <button class="btn-sm" onclick="refreshGoodsOwners()" id="btn-go-refresh" title="Load live list from Ongoing API">&#8635; Refresh</button>
     <div id="go-status" style="font-size:.76rem;color:var(--muted);align-self:center;min-width:120px"></div>
   </div>
 
@@ -248,6 +231,23 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
 
 </div><!-- /cfg-card -->
 
+<!-- Step 2: Upload -->
+<div class="card">
+  <div class="card-title"><div class="step-num">2</div> Upload Packing List(s)</div>
+  <div class="dz" id="src-dz" onclick="document.getElementById('src-input').click()">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    <p class="primary">Drop Excel or PDF files here, or click to browse</p>
+    <p class="secondary">Multiple files &middot; .xlsx .xls .xlsm .pdf &mdash; any supplier packing list format</p>
+  </div>
+  <input type="file" id="src-input" accept=".xlsx,.xls,.xlsm,.pdf" multiple style="display:none">
+  <div class="file-list" id="file-list"></div>
+</div>
+
+<!-- Extract button -->
+<button class="btn-primary" id="extract-btn" onclick="runExtract()" style="display:none">
+  Extract &amp; Preview &rarr;
+</button>
+
 <!-- Step 3: Review -->
 <div class="card" id="review-card" style="display:none">
   <div class="card-title"><div class="step-num">3</div> Review &amp; Edit</div>
@@ -309,13 +309,11 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
 <script>
 'use strict';
 
-// PDF.js worker
 if (typeof pdfjsLib !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
-// Constants
 const API_BASE      = 'https://api.ongoingsystems.se/BWSBNE';
 const GO_KEY        = 'univ_goods_owners_v1';
 const CRED_USER_KEY = 'ongoing_user';
@@ -340,13 +338,11 @@ const DEFAULT_GOODS_OWNERS = [
   {id:113, name:'Lihir Island - Empty Container Depot'},
 ];
 
-// State
 let uid = 1;
 const docs        = [];
 let previewRows   = [];
 let currentType   = 'inbound';
 
-// Helpers
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function setStatus(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
 
@@ -364,7 +360,6 @@ function parseDisplayDate(s) {
   return '';
 }
 
-// Goods Owner list
 function getGoodsOwners() {
   try {
     const stored = localStorage.getItem(GO_KEY);
@@ -412,11 +407,10 @@ async function refreshGoodsOwners() {
   } catch(e) {
     stat.innerHTML = `<span style="color:var(--danger)">&#10007; ${esc(e.message.substring(0,60))}</span>`;
   } finally {
-    btn.innerHTML = '&circlearrowleft; Refresh';
+    btn.innerHTML = '&#8635; Refresh';
   }
 }
 
-// Type toggle
 function setType(t) {
   currentType = t;
   document.getElementById('btn-inbound').className  = 'type-btn' + (t==='inbound'  ? ' active-inbound'  : '');
@@ -435,7 +429,6 @@ function setType(t) {
   if (previewRows.length) renderTable();
 }
 
-// Drop zone setup
 (function init() {
   populateGoDropdown(getGoodsOwners());
   const dz  = document.getElementById('src-dz');
@@ -447,7 +440,6 @@ function setType(t) {
   document.getElementById('submit-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 })();
 
-// File management
 function addFile(file) {
   const id = uid++;
   const isPdf = /\.pdf$/i.test(file.name);
@@ -497,7 +489,6 @@ function removeFile(id) {
 
 function setDoc(id, k, v) { const d = docs.find(x => x.id === id); if (d) d[k] = v.trim(); }
 
-// Number & unit parsers
 const NOT_A_CRATE_RE = /^(floor[\s-]?load\w*|loose|not\s+in\s+(a\s+)?(crate|box)|n\/?a|nil|none|tbd|-+)$/i;
 const _pn = s => { s=String(s).trim(); if(s.includes(',')&&s.includes('.'))s=s.replace(/,/g,''); else if(/,\d{3}(?:,\d{3})*(?:[^0-9]|$)/.test(s))s=s.replace(/,/g,''); else s=s.replace(/,/g,'.'); return parseFloat(s.replace(/[^0-9.]/g,'')); };
 const toM = (v,u) => { const n=_pn(v); if(isNaN(n)||!n)return ''; return u==='mm'?+((n/1000).toFixed(4)):u==='cm'?+((n/100).toFixed(4)):n>20?+((n/1000).toFixed(4)):+(n.toFixed(4)); };
@@ -513,7 +504,6 @@ const extractTagFromDesc = s => {
   return '';
 };
 
-// Header detection
 const KW = {
   tag:   ['tag no','tag number','tag#','tag','serial no','serial number','rel. part no','rel part no','part no','part number','article no','article number','material no','material number','item no','item number','item code','item','package no','packageno','mark no','markno','drawing no','rpn','your reference','ref no','reference no'],
   desc:  ['brief description','item description','product description','product type','description','desc'],
@@ -557,12 +547,11 @@ const buildCM = hdr => {
   return m;
 };
 
-// Notes parser
 function parseNotes(notes) {
   const s = String(notes || '').toLowerCase();
   const tagSuffixM = notes.match(/tag\s+suffix\s*[:=]\s*(\S+(?:\s+-\s+\S+)?)/i);
   const tagMap = [];
-  const mapM = [...notes.matchAll(/map\s+"?(.+?)"?\s*(?:->|→|=>)\s*"?(\S+)"?/gi)];
+  const mapM = [...notes.matchAll(/map\s+"?(.+?)\"?\s*(?:->|→|=>)\s*"?(\S+)"?/gi)];
   for (const m of mapM) tagMap.push({ key: m[1].trim().toLowerCase(), tag: m[2].trim() });
   return {
     tagSuffix: tagSuffixM ? ' ' + tagSuffixM[1].trim().replace(/^-\s*/,'- ') : '',
@@ -573,7 +562,6 @@ function parseNotes(notes) {
   };
 }
 
-// Pallet builder
 function mkPallet(prefix, bay, row, crate) {
   const ep = (prefix||'PK').trim();
   if (bay && row && crate) return `${ep} Bay ${bay} Row ${row} Crate ${crate}`;
@@ -582,7 +570,6 @@ function mkPallet(prefix, bay, row, crate) {
   return ep + (crate ? ('-' + crate) : '');
 }
 
-// Standard Excel sheet parser
 function _parseXLSheet(ws) {
   const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
   const hi = findHdr(raw);
@@ -649,7 +636,6 @@ function _parseXLSheet(ws) {
   return{rows:out,warn:out.length===0?'No data rows found — check the file has a recognisable header row.':null};
 }
 
-// Valmont Final Packing List parser
 function _parseValmontPackingList(wb, prefix) {
   const wsName=wb.SheetNames.find(n=>/^packing\s+list$/i.test(n.trim()));
   if(!wsName)return{rows:[]};
@@ -699,7 +685,6 @@ function _parseValmontPackingList(wb, prefix) {
   return{rows:out,warn:out.length===0?'Valmont PL: no items found.':'Valmont Final Packing List: weights only, no dimensions.'};
 }
 
-// Pall Packing Note parser
 function _parsePallPackingNote(ws, prefix) {
   const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
   let hi=-1;
@@ -733,7 +718,6 @@ function _parsePallPackingNote(ws, prefix) {
   return{rows:out,warn:out.length===0?'Packing Note found but no items extracted.':null};
 }
 
-// CASE-tab parser (Suntech / Wuxi bilingual)
 function _parseCaseSheets(wb, caseNames, prefix) {
   const ep=(prefix||'PK').trim();
   const usePrefixSpace=/case\s*$/i.test(ep);
@@ -779,7 +763,6 @@ function _parseCaseSheets(wb, caseNames, prefix) {
   return{rows:out,warn:out.length===0?'CASE sheets found but no items extracted.':'CASE-tab format: all tagged items extracted. Pallet-level weight/dims shown — edit individual rows as needed.'};
 }
 
-// tryParseGroupedCrate (CIPL/Bray PDF style)
 function tryParseGroupedCrate(allItems) {
   const crateItems=allItems.filter(i=>/^Crate\s+\d+$/i.test(i.text)&&i.x<120).sort((a,b)=>a.y-b.y);
   if(!crateItems.length)return null;
@@ -818,7 +801,6 @@ function tryParseGroupedCrate(allItems) {
   return rows.length?rows:null;
 }
 
-// tryParseDeliveryDocket (KIOSK)
 function tryParseDeliveryDocket(allItems) {
   if(!allItems.some(i=>/kiosk/i.test(i.text)))return null;
   const ki=allItems.findIndex(i=>/^KIOSK\s*#?$/i.test(i.text));if(ki<0)return null;
@@ -837,7 +819,6 @@ function tryParseDeliveryDocket(allItems) {
   return[{tag,desc,qty:1,wt,len,wid,hgt,crate:'',bay:'',row:'',detectedPO:''}];
 }
 
-// tryParseAlfaLavalPL
 function tryParseAlfaLavalPL(allItems) {
   if(!allItems.some(i=>/Gross\s*W\s*\(kgs\)/i.test(i.text)))return null;
   if(!allItems.some(i=>/Cust\.?\s*Item:/i.test(i.text)))return null;
@@ -859,7 +840,6 @@ function tryParseAlfaLavalPL(allItems) {
   return rows.length?rows:null;
 }
 
-// OCR fallback
 async function tryParseWithOCR(pdf) {
   if(!window.Tesseract){
     await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=()=>rej(new Error('Tesseract.js failed to load'));document.head.appendChild(s);});
@@ -878,7 +858,6 @@ async function tryParseWithOCR(pdf) {
   return{rows:tags.map(tag=>({tag,desc:'',qty:1,wt:'',len:'',wid:'',hgt:'',crate:'',bay:'',row:'',detectedPO:''})),warn:'OCR: tag codes only — descriptions and dimensions need manual entry.'};
 }
 
-// Main Excel dispatcher
 function parseXL(buf, prefix) {
   const wb=XLSX.read(buf,{type:'array'});
   const caseNames=wb.SheetNames.filter(n=>/^CASE\s*\d+$/i.test(n.trim()));
@@ -890,7 +869,6 @@ function parseXL(buf, prefix) {
   return result;
 }
 
-// Main PDF parser
 async function parsePDF(buf) {
   const lib=window.pdfjsLib;
   if(!lib)throw new Error('PDF.js did not load — check internet connection.');
@@ -904,9 +882,7 @@ async function parsePDF(buf) {
   }
   if(!allItems.length){const ocr=await tryParseWithOCR(pdf);if(ocr)return ocr;return{rows:[],warn:'No text found in PDF — file may be scanned/image-only.'}}
   allItems.sort((a,b)=>a.y!==b.y?a.y-b.y:a.x-b.x);
-
   const alfaR=tryParseAlfaLavalPL(allItems);if(alfaR)return{rows:alfaR};
-
   const TOL=5;const rawRows=[];let cur=[allItems[0]],curY=allItems[0].y;
   for(let i=1;i<allItems.length;i++){
     if(Math.abs(allItems[i].y-curY)<=TOL)cur.push(allItems[i]);
@@ -930,7 +906,6 @@ async function parsePDF(buf) {
   }
   const cm=buildCM(combinedHdrText);
   if(cm.tag===undefined)return{rows:[],warn:'No tag/part/serial column found in PDF — add rows manually.'};
-
   let cr2={num:'',wt:'',len:'',wid:'',hgt:'',bay:'',row:''};
   const uL2=unitOf(cm.len!==undefined?combinedHdrText[cm.len]:''),uW2=unitOf(cm.wid!==undefined?combinedHdrText[cm.wid]:''),uH2=unitOf(cm.hgt!==undefined?combinedHdrText[cm.hgt]:'');
   const out2=[];
@@ -963,14 +938,12 @@ async function parsePDF(buf) {
   return{rows:out2};
 }
 
-// dedup tags
 function dedupTags(rows) {
   const tds={};rows.forEach(r=>{if(!tds[r.tag])tds[r.tag]=new Set();tds[r.tag].add(r.desc||'');});
   const ti={};
   return rows.map(r=>{if((tds[r.tag]||new Set()).size<=1)return r;ti[r.tag]=(ti[r.tag]||0)+1;return{...r,tag:r.tag+'-'+ti[r.tag]};});
 }
 
-// Extract / Run
 async function runExtract() {
   const btn=document.getElementById('extract-btn');
   btn.innerHTML='<span class="spin"></span> Reading files…';btn.disabled=true;
@@ -998,7 +971,7 @@ async function runExtract() {
           rowComment:''
         };
       }));
-    }catch(e){errors.push(`<b>${esc(doc.name)}</b> — ${esc(e.message)}`);}
+    }catch(e){errors.push(`<b>${esc(doc.name)}</b> — ${esc(e.message)}`)}
   }
   previewRows=dedupTags(all);
   const poFreq={};previewRows.forEach(r=>{if(r.po)(poFreq[r.po]=(poFreq[r.po]||0)+1);});
@@ -1011,15 +984,13 @@ async function runExtract() {
   }
   setStatus('extract-errors',errors.length?`<div class="err-box">${errors.join('<br>')}</div>`:'');
   document.getElementById('row-count').textContent=previewRows.length+' rows extracted';
-  document.getElementById('cfg-card').style.display='block';
   renderTable();
   document.getElementById('review-card').style.display='block';
   document.getElementById('gen-card').style.display='block';
   btn.innerHTML='Extract &amp; Preview &rarr;';btn.disabled=false;
-  document.getElementById('cfg-card').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('review-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// Review table
 function renderTable() {
   const thead=document.getElementById('preview-head');
   const tbody=document.getElementById('preview-body');
@@ -1051,45 +1022,34 @@ function addRow(){
   document.getElementById('row-count').textContent=previewRows.length+' rows';
 }
 
-// Generate Purchase Order xlsx (Ongoing inbound import format)
 function generatePOXlsx() {
   const ONG_HEADERS=['OrderNo','InDate','OrderDate','Reference','Container','CustomerNumber','RowNumber','RowId','ArticleNumber','ArticleName','BarCode','NumberOfItems','InvoiceNumber','RowPrice','RowBatchNo','RowSerialNumber','SupplierNumber','SupplierName','SupplierAddress','SupplierAddress2','SupplierAddress3','SupplierPostCode','SupplierCity','SupplierCountryCode','SupplierPhone','SupplierEmail','ArticleItemPalletItem.LabelId','Weight','Length','Width','Height','InOrderLine.ExternalOrderLineCode'];
   const I={OrderNo:0,InDate:1,Reference:3,Container:4,ArticleNumber:8,ArticleName:9,NumberOfItems:11,SupplierName:17,LabelId:26,Weight:27,Length:28,Width:29,Height:30,ExtLineCode:31};
-
   const globalPO=document.getElementById('cfg-docno').value.trim();
   const inDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
   const supplier=document.getElementById('cfg-supplier').value.trim();
   const container=document.getElementById('cfg-container').value.trim();
   const remark=document.getElementById('cfg-remark').value.trim();
-
   const dataRows=previewRows.map((r,idx)=>{
     const row=new Array(ONG_HEADERS.length).fill('');
-    row[I.OrderNo]      =r.po||globalPO;
-    row[I.InDate]       =inDate;
-    row[I.Reference]    =remark;
-    row[I.Container]    =container;
-    row[I.ArticleNumber]=r.tag;
-    row[I.ArticleName]  =r.desc;
+    row[I.OrderNo]=r.po||globalPO;row[I.InDate]=inDate;row[I.Reference]=remark;row[I.Container]=container;
+    row[I.ArticleNumber]=r.tag;row[I.ArticleName]=r.desc;
     row[I.NumberOfItems]=r.qty!==''&&r.qty!=null?Number(r.qty):'';
-    row[I.SupplierName] =r.supplier||supplier;
-    row[I.LabelId]      =r.pallet;
-    row[I.Weight]       =r.wt!==''&&r.wt!=null?Number(r.wt):'';
-    row[I.Length]       =r.len!==''&&r.len!=null?Number(r.len):'';
-    row[I.Width]        =r.wid!==''&&r.wid!=null?Number(r.wid):'';
-    row[I.Height]       =r.hgt!==''&&r.hgt!=null?Number(r.hgt):'';
-    row[I.ExtLineCode]  =String(idx+1);
+    row[I.SupplierName]=r.supplier||supplier;row[I.LabelId]=r.pallet;
+    row[I.Weight]=r.wt!==''&&r.wt!=null?Number(r.wt):'';
+    row[I.Length]=r.len!==''&&r.len!=null?Number(r.len):'';
+    row[I.Width]=r.wid!==''&&r.wid!=null?Number(r.wid):'';
+    row[I.Height]=r.hgt!==''&&r.hgt!=null?Number(r.hgt):'';
+    row[I.ExtLineCode]=String(idx+1);
     return row;
   });
-
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([ONG_HEADERS,...dataRows]),'Data');
   return wb;
 }
 
-// Generate Order xlsx (Ongoing outbound order import format)
 function generateOrderXlsx() {
   const hdrs=['CustomerNumber','DeliveryDate','Reference','TranporterOrderNumber','OrderNo','ArticleNumber','ArticleName','OrderRowBatchNo','NumberOfItems','OrderComment','OrderRowComment','SalesCode','OrderDeliveryInstruction','CustomerOrderNumber','WayOfDelivery','Transporter.TransporterCode','Transporter.TransporterServiceCode','Transporter.TransporterCustomerNumber','Customer.Name','Customer.Address','Customer.Address2','Customer.Address3','Customer.PostCode','Customer.City','Customer.TelePhone','Customer.Remark','Customer.Email','Customer.MobilePhone','Customer.CountryCode','Customer.CountryName','Customer.CountryStateCode','Customer.DeliveryInstruction','Customer.NotifyBySMS','Customer.NotifyByEmail','Customer.NotifyByTelephone'];
-
   const orderNo=document.getElementById('cfg-docno').value.trim();
   const isoDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
   const custCode=document.getElementById('cfg-custcode').value.trim();
@@ -1098,23 +1058,20 @@ function generateOrderXlsx() {
   const wod=document.getElementById('cfg-wayofdelivery').value;
   const comment=document.getElementById('cfg-comment').value.trim();
   const address=document.getElementById('cfg-address').value.trim();
-
   const data=previewRows.map((r,i)=>{
     const row=new Array(hdrs.length).fill('');
-    row[0]=custCode; row[1]=isoDate||''; row[4]=orderNo;
-    row[5]=r.tag; row[6]=r.desc; row[8]=r.qty!==''?Number(r.qty):'';
-    row[9]=i===0?comment:''; row[10]=r.rowComment||'';
-    row[14]=wod; row[18]=i===0?custName:'';
-    row[19]=i===0?address:''; row[23]=i===0?city:'';
+    row[0]=custCode;row[1]=isoDate||'';row[4]=orderNo;
+    row[5]=r.tag;row[6]=r.desc;row[8]=r.qty!==''?Number(r.qty):'';
+    row[9]=i===0?comment:'';row[10]=r.rowComment||'';
+    row[14]=wod;row[18]=i===0?custName:'';
+    row[19]=i===0?address:'';row[23]=i===0?city:'';
     return row;
   });
-
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdrs,...data]),'Data');
   return wb;
 }
 
-// Download
 function generateExcel() {
   if(!previewRows.length){alert('No rows to export.');return;}
   const fname=document.getElementById('out-name').value.trim()||'PackingList_import.xlsx';
@@ -1129,7 +1086,6 @@ function generateExcel() {
   setStatus('gen-status',`<div class="ok-box">&#10003; <b>${esc(fname)}</b> downloaded — ${previewRows.length} rows${allPos.length?', PO/Order: <b>'+allPos.map(esc).join(', ')+'</b>':''}.<br>${hint}</div>`);
 }
 
-// Submit modal
 function openSubmitModal() {
   if(!previewRows.length){alert('No rows to submit.');return;}
   const isIn=currentType==='inbound';
@@ -1139,7 +1095,6 @@ function openSubmitModal() {
   const goId=goSel.value;
   const savedU=localStorage.getItem(CRED_USER_KEY)||'Tnix';
   const savedP=localStorage.getItem(CRED_PASS_KEY)||'';
-
   const summaryRows=isIn
     ?`<tr><td>Purchase Order</td><td><b>${esc(docNo||'(not set)')}</b></td></tr>
        <tr><td>Lines</td><td>${previewRows.length}</td></tr>
@@ -1152,7 +1107,6 @@ function openSubmitModal() {
               <tr><td>Delivery Date</td><td>${esc(document.getElementById('cfg-date').value||'—')}</td></tr>
               <tr><td>Customer</td><td>${esc(document.getElementById('cfg-custcode').value||'—')} ${esc(document.getElementById('cfg-custname').value||'')}</td></tr>`;
     })();
-
   document.getElementById('modal-body').innerHTML=`
     <div class="warn-box" style="margin-bottom:14px">
       &#9888; This will create real records in <b>Ongoing WMS (${isIn?'Purchase Order':'Outbound Order'})</b>.<br>
@@ -1167,7 +1121,6 @@ function openSubmitModal() {
     </div>
     <div class="hint" style="margin-top:4px">Stored in browser localStorage — sent only to <code>api.ongoingsystems.se</code>.</div>
     <div id="modal-prog" style="margin-top:12px"></div>`;
-
   document.getElementById('btn-mo').disabled=false;
   document.getElementById('btn-mo').textContent='Submit to Ongoing WMS';
   document.getElementById('modal-actions').innerHTML='<button class="btn-mc" onclick="closeModal()">Cancel</button><button class="btn-mo" id="btn-mo" onclick="confirmSubmit()">Submit to Ongoing WMS</button>';
@@ -1185,14 +1138,11 @@ async function confirmSubmit() {
   localStorage.setItem(CRED_PASS_KEY,pass);
   document.getElementById('btn-mo').disabled=true;
   document.getElementById('modal-actions').querySelector('.btn-mc').disabled=true;
-
   if(currentType==='inbound') await submitPO(user,pass,prog);
   else await submitOrder(user,pass,prog);
-
   document.getElementById('modal-actions').innerHTML='<button class="btn-mc" onclick="closeModal()">Close</button>';
 }
 
-// Submit Inbound PO (REST PUT /api/v1/purchaseOrders)
 async function submitPO(user, pass, prog) {
   const goId=parseInt(document.getElementById('cfg-go').value);
   const docNo=document.getElementById('cfg-docno').value.trim();
@@ -1201,67 +1151,46 @@ async function submitPO(user, pass, prog) {
   const container=document.getElementById('cfg-container').value.trim();
   const remark=document.getElementById('cfg-remark').value.trim();
   const authHdr='Basic '+btoa(unescape(encodeURIComponent(user+':'+pass)));
-
   const poMap={};
   previewRows.forEach(r=>{const k=r.po||docNo||'(no PO)';(poMap[k]=poMap[k]||[]).push(r);});
   const results=[];
-
   for(const [poNum,rows] of Object.entries(poMap)) {
     prog.innerHTML=`<span class="spin"></span> Submitting PO <b>${esc(poNum)}</b> (${rows.length} lines)…`;
     const body={
-      goodsOwnerId: goId,
-      purchaseOrderNumber: poNum,
-      inDate: inDate?inDate+'T00:00:00':undefined,
-      supplierName: supplier||undefined,
-      containerNumber: container||undefined,
-      remark: remark||undefined,
-      purchaseOrderLines: rows.map((r,i)=>({
-        rowNumber: i+1,
-        article: { articleNumber:r.tag, articleName:r.desc },
-        numberOfItems: r.qty!==''?Number(r.qty):1,
-        comment: r.pallet||undefined,
-        itemWeight: r.wt!==''&&r.wt!=null?Number(r.wt):undefined,
-        itemLength: r.len!==''&&r.len!=null?Number(r.len):undefined,
-        itemWidth:  r.wid!==''&&r.wid!=null?Number(r.wid):undefined,
-        itemHeight: r.hgt!==''&&r.hgt!=null?Number(r.hgt):undefined,
+      goodsOwnerId:goId,purchaseOrderNumber:poNum,
+      inDate:inDate?inDate+'T00:00:00':undefined,
+      supplierName:supplier||undefined,containerNumber:container||undefined,remark:remark||undefined,
+      purchaseOrderLines:rows.map((r,i)=>({
+        rowNumber:i+1,
+        article:{articleNumber:r.tag,articleName:r.desc},
+        numberOfItems:r.qty!==''?Number(r.qty):1,
+        comment:r.pallet||undefined,
+        itemWeight:r.wt!==''&&r.wt!=null?Number(r.wt):undefined,
+        itemLength:r.len!==''&&r.len!=null?Number(r.len):undefined,
+        itemWidth:r.wid!==''&&r.wid!=null?Number(r.wid):undefined,
+        itemHeight:r.hgt!==''&&r.hgt!=null?Number(r.hgt):undefined,
       }))
     };
-    body.purchaseOrderLines=body.purchaseOrderLines.map(l=>{
-      Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);
-      return l;
-    });
+    body.purchaseOrderLines=body.purchaseOrderLines.map(l=>{Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);return l;});
     Object.keys(body).forEach(k=>body[k]===undefined&&delete body[k]);
-
     try{
-      const resp=await fetch(API_BASE+'/api/v1/purchaseOrders',{
-        method:'PUT',
-        headers:{'Content-Type':'application/json','Authorization':authHdr},
-        body:JSON.stringify(body)
-      });
-      if(resp.ok){
-        const json=await resp.json().catch(()=>({}));
-        results.push({poNum,ok:true,detail:json.purchaseOrderId?'Ongoing ID: '+json.purchaseOrderId:'Accepted'});
-      }else{
-        const txt=await resp.text().catch(()=>'');
-        results.push({poNum,ok:false,detail:`HTTP ${resp.status} — ${txt.substring(0,140)}`});
-      }
+      const resp=await fetch(API_BASE+'/api/v1/purchaseOrders',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':authHdr},body:JSON.stringify(body)});
+      if(resp.ok){const json=await resp.json().catch(()=>({}));results.push({poNum,ok:true,detail:json.purchaseOrderId?'Ongoing ID: '+json.purchaseOrderId:'Accepted'});}
+      else{const txt=await resp.text().catch(()=>'');results.push({poNum,ok:false,detail:`HTTP ${resp.status} — ${txt.substring(0,140)}`});}
     }catch(err){
       const cors=err instanceof TypeError;
       results.push({poNum,ok:false,cors,detail:cors?'Network/CORS error — download Excel and import manually.':err.message});
     }
   }
-
   const rows=results.map(r=>`<tr class="${r.ok?'r-ok':'r-err'}"><td>${r.ok?'&#10003;':'&#10007;'}</td><td><b>${esc(r.poNum)}</b></td><td style="font-size:.76rem">${esc(r.detail)}</td></tr>`).join('');
   prog.innerHTML=`<table class="sum-tbl"><thead><tr><th></th><th>PO Number</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>`;
-
   const allOk=results.every(r=>r.ok),hasCors=results.some(r=>r.cors);
-  if(allOk) setStatus('gen-status',`<div class="ok-box">&#10003; ${results.length} purchase order(s) created in Ongoing WMS (goods owner ID ${document.getElementById('cfg-go').value}).<br><span style="color:var(--muted)">Pallet labels require Excel import — use "Download Ongoing WMS Import File" above.</span></div>`);
-  else if(hasCors) setStatus('gen-status',`<div class="err-box">&#10007; CORS error — Ongoing API may not allow direct browser requests. Download Excel and import manually.</div>`);
+  if(allOk)setStatus('gen-status',`<div class="ok-box">&#10003; ${results.length} purchase order(s) created in Ongoing WMS (goods owner ID ${document.getElementById('cfg-go').value}).<br><span style="color:var(--muted)">Pallet labels require Excel import — use "Download Ongoing WMS Import File" above.</span></div>`);
+  else if(hasCors)setStatus('gen-status',`<div class="err-box">&#10007; CORS error — Ongoing API may not allow direct browser requests. Download Excel and import manually.</div>`);
   else setStatus('gen-status',`<div class="err-box">&#10007; Some submissions failed — see modal for details.</div>`);
-  if(!allOk) document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
+  if(!allOk)document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
 }
 
-// Submit Outbound Order (REST PUT /api/v1/orders)
 async function submitOrder(user, pass, prog) {
   const goId=parseInt(document.getElementById('cfg-go').value);
   const orderNo=document.getElementById('cfg-docno').value.trim();
@@ -1273,40 +1202,21 @@ async function submitOrder(user, pass, prog) {
   const comment=document.getElementById('cfg-comment').value.trim();
   const address=document.getElementById('cfg-address').value.trim();
   const authHdr='Basic '+btoa(unescape(encodeURIComponent(user+':'+pass)));
-
   if(!custCode){prog.innerHTML='<span style="color:var(--danger)">Customer Code is required for outbound orders.</span>';document.getElementById('btn-mo').disabled=false;return;}
-
   prog.innerHTML=`<span class="spin"></span> Submitting order <b>${esc(orderNo)}</b> (${previewRows.length} lines)…`;
-
   const body={
-    goodsOwnerId: goId,
-    orderNumber: orderNo,
-    deliveryDate: isoDate?isoDate+'T00:00:00':undefined,
-    orderComment: comment||undefined,
-    wayOfDelivery: wod?{wayOfDeliveryCode:wod}:undefined,
-    consignee: {
-      customerCode: custCode,
-      name: custName||undefined,
-      address: address||undefined,
-      city: city||undefined,
-    },
-    orderLines: previewRows.map((r,i)=>({
-      rowNumber: i+1,
-      article: {articleNumber:r.tag, articleName:r.desc},
-      numberOfItems: r.qty!==''?Number(r.qty):1,
-      rowComment: r.rowComment||undefined,
-    }))
+    goodsOwnerId:goId,orderNumber:orderNo,
+    deliveryDate:isoDate?isoDate+'T00:00:00':undefined,
+    orderComment:comment||undefined,
+    wayOfDelivery:wod?{wayOfDeliveryCode:wod}:undefined,
+    consignee:{customerCode:custCode,name:custName||undefined,address:address||undefined,city:city||undefined},
+    orderLines:previewRows.map((r,i)=>({rowNumber:i+1,article:{articleNumber:r.tag,articleName:r.desc},numberOfItems:r.qty!==''?Number(r.qty):1,rowComment:r.rowComment||undefined}))
   };
   body.orderLines=body.orderLines.map(l=>{Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);return l;});
   Object.keys(body).forEach(k=>body[k]===undefined&&delete body[k]);
   if(body.consignee)Object.keys(body.consignee).forEach(k=>body.consignee[k]===undefined&&delete body.consignee[k]);
-
   try{
-    const resp=await fetch(API_BASE+'/api/v1/orders',{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','Authorization':authHdr},
-      body:JSON.stringify(body)
-    });
+    const resp=await fetch(API_BASE+'/api/v1/orders',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':authHdr},body:JSON.stringify(body)});
     if(resp.ok){
       const json=await resp.json().catch(()=>({}));
       const detail=json.orderId?'Ongoing order ID: '+json.orderId:'Accepted';
@@ -1326,13 +1236,11 @@ async function submitOrder(user, pass, prog) {
   }
 }
 
-// Start over
 function startOver() {
   docs.length=0;previewRows=[];
   document.getElementById('file-list').innerHTML='';
   document.getElementById('src-dz').classList.remove('filled');
   document.getElementById('extract-btn').style.display='none';
-  document.getElementById('cfg-card').style.display='none';
   document.getElementById('review-card').style.display='none';
   document.getElementById('gen-card').style.display='none';
   document.getElementById('extract-errors').innerHTML='';
