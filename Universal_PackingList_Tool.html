@@ -72,7 +72,7 @@ textarea{resize:vertical;min-height:48px;line-height:1.5}
 .btn-api{background:var(--surface2);border:1px solid rgba(99,102,241,.35);width:100%;border-radius:var(--radius);padding:12px;color:#a5b4fc;font-size:.92rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;margin-bottom:10px}
 .btn-api:hover{background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.6)}
 .btn-api:disabled{opacity:.3;cursor:not-allowed}
-.btn-add{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px 14px;cursor:pointer;font-size:.82rem;width:100%;transition:all .15s;font-family:inherit;margin-top:8px}
+.btn-add{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px 14px;cursor:pointer;font-size:.82rem;width:100%;transition:all .15px;font-family:inherit;margin-top:8px}
 .btn-add:hover{border-color:var(--accent);color:var(--accent)}
 .btn-del{background:none;border:none;color:var(--muted);border-radius:5px;cursor:pointer;font-size:1.1rem;line-height:1;transition:color .15s;padding:2px 5px}
 .btn-del:hover{color:var(--danger)}
@@ -511,7 +511,7 @@ const KW = {
   len:   ['length','l(mm)','l (mm)','l(m)','dim l','l(cm)','packed l'],
   wid:   ['width','w(mm)','w (mm)','w(m)','dim w','w(cm)','packed w'],
   hgt:   ['height','heigth','h(mm)','h (mm)','h(m)','dim h','h(cm)','packed h'],
-  crate: ['crate no','crate number','crate','pallet no','pallet','box no','box number','box','carton no','carton','container no','container','packing id','packing no','packing number','comments'],
+  crate: ['crate no','crate number','crate','pallet no','pallet','box no','box number','box','carton no','carton','container no','container','packing id','packing no','packing number','case no','case number','comments'],
   qty:   ['quantity','qty','nos.','nos','no. of items','pcs','pieces'],
   bay:   ['bay no','bay'],
   row:   ['storage row','row no','row'],
@@ -540,6 +540,8 @@ const buildCM = hdr => {
     }
   });
   hdr.forEach((c,i) => { if(/gross\s*weight/i.test(String(c))) m.wt=i; });
+  // Explicit "Tag No / Tag Number" always wins over generic "item no" / "item number"
+  hdr.forEach((c,i) => { const s=String(c??'').toLowerCase().trim(); if(/\btag\s+(no\.?|number)\b/.test(s)||/^tag\s*#/.test(s)) m.tag=i; });
   if(m.hgt!==undefined&&m.hgt===m.len) {
     m.hgt=undefined;
     hdr.forEach((c,i) => { if(m.hgt===undefined&&/^\s*h(?:eight|eigth)?\b/i.test(String(c).trim())) m.hgt=i; });
@@ -547,11 +549,12 @@ const buildCM = hdr => {
   return m;
 };
 
+// ── Notes parser ─────────────────────────────────────────────────────────────
 function parseNotes(notes) {
   const s = String(notes || '').toLowerCase();
   const tagSuffixM = notes.match(/tag\s+suffix\s*[:=]\s*(\S+(?:\s+-\s+\S+)?)/i);
   const tagMap = [];
-  const mapM = [...notes.matchAll(/map\s+"?(.+?)\"?\s*(?:->|→|=>)\s*"?(\S+)"?/gi)];
+  const mapM = [...notes.matchAll(/map\s+"?(.+?)"?\s*(?:->|→|=>)\s*"?(\S+)"?/gi)];
   for (const m of mapM) tagMap.push({ key: m[1].trim().toLowerCase(), tag: m[2].trim() });
   return {
     tagSuffix: tagSuffixM ? ' ' + tagSuffixM[1].trim().replace(/^-\s*/,'- ') : '',
@@ -562,6 +565,7 @@ function parseNotes(notes) {
   };
 }
 
+// ── Pallet builder ───────────────────────────────────────────────────────────
 function mkPallet(prefix, bay, row, crate) {
   const ep = (prefix||'PK').trim();
   if (bay && row && crate) return `${ep} Bay ${bay} Row ${row} Crate ${crate}`;
@@ -570,6 +574,7 @@ function mkPallet(prefix, bay, row, crate) {
   return ep + (crate ? ('-' + crate) : '');
 }
 
+// ── Standard Excel sheet parser ──────────────────────────────────────────────
 function _parseXLSheet(ws) {
   const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
   const hi = findHdr(raw);
@@ -869,6 +874,79 @@ function parseXL(buf, prefix) {
   return result;
 }
 
+// ── SchuF Speciality Valves packing list parser ───────────────────────────────
+// Detected by: header has "Order No.", "Part No.", "Serial No." + per-box metadata rows
+function tryParseSchuF(allItems, combinedHdrText, hdrItems, dataStart, rawRows) {
+  const hasSerial = combinedHdrText.some(h=>/serial\s+no/i.test(h));
+  const hasOrder  = combinedHdrText.some(h=>/^order\s+no/i.test(h));
+  const hasPart   = combinedHdrText.some(h=>/^part\s+no/i.test(h));
+  if(!hasSerial||!hasOrder||!hasPart) return null;
+
+  // Build column index map specific to SchuF layout
+  const scm={};
+  combinedHdrText.forEach((h,i)=>{
+    if(/^order\s+no/i.test(h))        scm.po   = i;
+    if(/^part\s+no/i.test(h))          scm.part = i;
+    if(/^description$/i.test(h.trim())) scm.desc = i;
+    if(/serial\s+no/i.test(h))         scm.tag  = i;
+    if(/unit\s+net\s+weight/i.test(h))  scm.wt   = i;
+  });
+  if(scm.tag===undefined||scm.desc===undefined) return null;
+
+  const SKIP=/^(customer\s+address|shipper\s+address|alpha\s+hpa|53-|yarwun|queensland|^au$|ph\.|box\s+summary|total\s+(no\.|qty|gross|net|quantity)|plywood|carton|^order$|^line$|^no\.$|^rel\.$|page\s+\d|^shipment\s+id)/i;
+
+  let boxNum='1', boxL='', boxW='', boxH='';
+  const out=[];
+
+  for(let i=dataStart;i<rawRows.length;i++){
+    const row=rawRows[i]; if(!row.length) continue;
+    const first=row[0].text;
+
+    if(SKIP.test(first)) continue;
+
+    // Box section header: "Box 1/2 - Plywoodcorrugatedbox"
+    const boxM=first.match(/^Box\s+(\d+)/i);
+    if(boxM){ boxNum=boxM[1]; boxL=''; boxW=''; boxH=''; continue; }
+
+    // Box metadata row: Gross Weight / Dimensions
+    if(/^(Gross\s+Weight|Net\s+Weight|Dimensions)/i.test(first)){
+      const txt=row.map(it=>it.text).join(' ');
+      const dm=txt.match(/([\d,]+\.?\d*)\s*[xX×]\s*([\d,]+\.?\d*)\s*[xX×]\s*([\d,]+\.?\d*)\s*mm/i);
+      if(dm){boxL=toM(dm[1].replace(/,/g,''),'mm');boxW=toM(dm[2].replace(/,/g,''),'mm');boxH=toM(dm[3].replace(/,/g,''),'mm');}
+      continue;
+    }
+
+    // Map cells to header columns by x-proximity
+    const cells={};
+    for(const it of row){
+      let best=-1,bestD=Infinity;
+      hdrItems.forEach((h,idx)=>{const d=Math.abs(h.x-it.x);if(d<bestD){bestD=d;best=idx;}});
+      if(best<0||bestD>60)continue;
+      if(!cells[best])cells[best]=it.text;else cells[best]+=' '+it.text;
+    }
+    const get=idx=>(idx!==undefined&&cells[idx]!==undefined)?String(cells[idx]).trim():'';
+
+    const tag=get(scm.tag);
+    if(!tag||/^[\*\-\s]+$/.test(tag)) continue; // skip placeholder rows
+
+    const wt=get(scm.wt).replace(/\s*kgs?\.?/i,'').trim();
+    out.push({tag, desc:get(scm.desc), qty:1, wt:toN(wt),
+      len:boxL, wid:boxW, hgt:boxH,
+      crate:boxNum, bay:'', row:'', detectedPO:get(scm.po)});
+  }
+  if(!out.length) return null;
+
+  // Collapse same tag+desc+box into one row (sum qty) — handles identical serialised units
+  const cmap=new Map();
+  for(const r of out){
+    const k=`${r.tag}|${r.desc}|${r.crate}`;
+    if(cmap.has(k))cmap.get(k).qty=(Number(cmap.get(k).qty)||0)+1;
+    else cmap.set(k,{...r});
+  }
+  return {rows:[...cmap.values()], warn:null};
+}
+
+// ── Main PDF parser ──────────────────────────────────────────────────────────
 async function parsePDF(buf) {
   const lib=window.pdfjsLib;
   if(!lib)throw new Error('PDF.js did not load — check internet connection.');
@@ -880,9 +958,11 @@ async function parsePDF(buf) {
     const off=(p-1)*vp.height;
     tc.items.filter(i=>i.str&&i.str.trim()).forEach(i=>allItems.push({text:i.str.trim(),x:i.transform[4],y:off+(vp.height-i.transform[5])}));
   }
-  if(!allItems.length){const ocr=await tryParseWithOCR(pdf);if(ocr)return ocr;return{rows:[],warn:'No text found in PDF — file may be scanned/image-only.'}}
+  if(!allItems.length){const ocr=await tryParseWithOCR(pdf);if(ocr)return ocr;return{rows:[],warn:'No text found in PDF — file may be scanned/image-only.'};}
   allItems.sort((a,b)=>a.y!==b.y?a.y-b.y:a.x-b.x);
+
   const alfaR=tryParseAlfaLavalPL(allItems);if(alfaR)return{rows:alfaR};
+
   const TOL=5;const rawRows=[];let cur=[allItems[0]],curY=allItems[0].y;
   for(let i=1;i<allItems.length;i++){
     if(Math.abs(allItems[i].y-curY)<=TOL)cur.push(allItems[i]);
@@ -906,6 +986,10 @@ async function parsePDF(buf) {
   }
   const cm=buildCM(combinedHdrText);
   if(cm.tag===undefined)return{rows:[],warn:'No tag/part/serial column found in PDF — add rows manually.'};
+
+  const schuFR=tryParseSchuF(allItems,combinedHdrText,hdrItems,dataStart,rawRows);
+  if(schuFR) return schuFR;
+
   let cr2={num:'',wt:'',len:'',wid:'',hgt:'',bay:'',row:''};
   const uL2=unitOf(cm.len!==undefined?combinedHdrText[cm.len]:''),uW2=unitOf(cm.wid!==undefined?combinedHdrText[cm.wid]:''),uH2=unitOf(cm.hgt!==undefined?combinedHdrText[cm.hgt]:'');
   const out2=[];
@@ -938,12 +1022,19 @@ async function parsePDF(buf) {
   return{rows:out2};
 }
 
+// ── dedup tags ───────────────────────────────────────────────────────────────
 function dedupTags(rows) {
-  const tds={};rows.forEach(r=>{if(!tds[r.tag])tds[r.tag]=new Set();tds[r.tag].add(r.desc||'');});
+  const tds={};
+  rows.forEach(r=>{if(!r.tag)return;if(!tds[r.tag])tds[r.tag]=new Set();tds[r.tag].add(r.desc||'');});
   const ti={};
-  return rows.map(r=>{if((tds[r.tag]||new Set()).size<=1)return r;ti[r.tag]=(ti[r.tag]||0)+1;return{...r,tag:r.tag+'-'+ti[r.tag]};});
+  return rows.map(r=>{
+    if(!r.tag)return r; // keep empty tags as-is — don't suffix them
+    if((tds[r.tag]||new Set()).size<=1)return r;
+    ti[r.tag]=(ti[r.tag]||0)+1;return{...r,tag:r.tag+'-'+ti[r.tag]};
+  });
 }
 
+// ── Extract / Run ────────────────────────────────────────────────────────────
 async function runExtract() {
   const btn=document.getElementById('extract-btn');
   btn.innerHTML='<span class="spin"></span> Reading files…';btn.disabled=true;
