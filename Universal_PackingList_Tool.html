@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ongoing WMS — Universal Packing List Tool</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3348;
+  --accent:#6366f1;--accent2:#8b5cf6;--success:#36d399;--danger:#f87171;
+  --warning:#f59e0b;--text:#e2e8f0;--muted:#64748b;--radius:10px;
+  --inbound:#06b6d4;--outbound:#f59e0b;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:28px 16px 60px}
+.container{max-width:1200px;margin:0 auto}
+.header{text-align:center;margin-bottom:32px}
+.header h1{font-size:1.85rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:5px}
+.header p{color:var(--muted);font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+.card-title{display:flex;align-items:center;gap:10px;font-size:.95rem;font-weight:600;margin-bottom:16px}
+.step-num{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
+.dz{border:2px dashed var(--border);border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:all .18s;color:var(--muted);user-select:none}
+.dz:hover,.dz.over{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.04)}
+.dz.filled{border-style:solid;border-color:var(--success);color:var(--success)}
+.dz svg{display:block;margin:0 auto 10px}
+.dz .primary{font-size:.92rem;margin-bottom:4px}
+.dz .secondary{font-size:.76rem;color:var(--muted)}
+.file-list{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.file-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.file-item-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.file-name{font-size:.85rem;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;font-size:.64rem;font-weight:600;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.b-blue{background:rgba(99,102,241,.12);color:var(--accent);border:1px solid rgba(99,102,241,.25)}
+.b-orange{background:rgba(245,158,11,.12);color:var(--warning);border:1px solid rgba(245,158,11,.25)}
+.b-green{background:rgba(54,211,153,.12);color:var(--success);border:1px solid rgba(54,211,153,.25)}
+.b-cyan{background:rgba(6,182,212,.12);color:var(--inbound);border:1px solid rgba(6,182,212,.25)}
+.file-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.field-group label{display:block;font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+input[type=text],input[type=password],input[type=date],select,textarea{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.84rem;padding:7px 10px;outline:none;font-family:inherit;width:100%;transition:border-color .15s}
+input[type=text]:focus,input[type=password]:focus,input[type=date]:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+textarea{resize:vertical;min-height:48px;line-height:1.5}
+
+/* Type toggle */
+.type-toggle{display:flex;gap:6px;margin-bottom:16px}
+.type-btn{flex:1;padding:10px 14px;border-radius:8px;border:2px solid var(--border);background:var(--surface2);color:var(--muted);font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;text-align:center}
+.type-btn.active-inbound{border-color:var(--inbound);color:var(--inbound);background:rgba(6,182,212,.1)}
+.type-btn.active-outbound{border-color:var(--outbound);color:var(--outbound);background:rgba(245,158,11,.1)}
+
+/* Config grid */
+.cfg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.cfg-grid.two{grid-template-columns:repeat(2,1fr)}
+.cfg-grid.four{grid-template-columns:repeat(4,1fr)}
+.span2{grid-column:span 2}
+
+/* Goods owner row */
+.go-row{display:flex;align-items:flex-end;gap:8px;margin-bottom:14px}
+.go-row .field-group{flex:1}
+.btn-sm{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.78rem;padding:6px 12px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-sm:hover{border-color:var(--accent);color:var(--text)}
+
+/* Buttons */
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);padding:14px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .18s;margin-bottom:18px}
+.btn-primary:hover{opacity:.88}
+.btn-primary:disabled{opacity:.3;cursor:not-allowed}
+.btn-dl{background:linear-gradient(135deg,#059669,#0d9488);width:100%;border:none;border-radius:var(--radius);padding:12px;color:#fff;font-size:.92rem;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .18s;margin-bottom:10px}
+.btn-dl:hover{opacity:.88}
+.btn-dl:disabled{opacity:.3;cursor:not-allowed}
+.btn-api{background:var(--surface2);border:1px solid rgba(99,102,241,.35);width:100%;border-radius:var(--radius);padding:12px;color:#a5b4fc;font-size:.92rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;margin-bottom:10px}
+.btn-api:hover{background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.6)}
+.btn-api:disabled{opacity:.3;cursor:not-allowed}
+.btn-add{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px 14px;cursor:pointer;font-size:.82rem;width:100%;transition:all .15s;font-family:inherit;margin-top:8px}
+.btn-add:hover{border-color:var(--accent);color:var(--accent)}
+.btn-del{background:none;border:none;color:var(--muted);border-radius:5px;cursor:pointer;font-size:1.1rem;line-height:1;transition:color .15s;padding:2px 5px}
+.btn-del:hover{color:var(--danger)}
+
+/* Table */
+.tbl-scroll{overflow-x:auto;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{text-align:left;font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:3px 3px;vertical-align:middle}
+tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+td input[type=text]{background:var(--surface2);border:1px solid transparent;border-radius:5px;padding:5px 7px;font-size:.82rem}
+td input[type=text]:hover{border-color:var(--border)}
+td input[type=text]:focus{border-color:var(--accent);background:var(--bg)}
+
+/* Status boxes */
+.err-box{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:10px 14px;font-size:.82rem;color:#fca5a5;margin-bottom:12px}
+.ok-box{background:rgba(54,211,153,.07);border:1px solid rgba(54,211,153,.25);border-radius:8px;padding:10px 14px;font-size:.82rem;color:#6ee7b7;margin-bottom:12px}
+.warn-box{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;font-size:.82rem;color:var(--warning);margin-bottom:12px}
+.hint{font-size:.76rem;color:var(--muted);line-height:1.5;margin-top:5px}
+.row-count{font-size:.78rem;color:var(--muted);margin-bottom:8px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.footer{text-align:center;margin-top:24px;font-size:.76rem;color:var(--muted)}
+.footer button{background:none;border:none;color:var(--muted);font-size:.76rem;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0}
+.footer button:hover{color:var(--text)}
+
+/* Modal */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:600px;width:calc(100% - 32px);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.btn-mc{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-mc:hover{border-color:var(--muted)}
+.btn-mo{flex:2;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;padding:10px;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-mo:hover{opacity:.88}
+.btn-mo:disabled{opacity:.3;cursor:not-allowed}
+.sum-tbl{width:100%;border-collapse:collapse;font-size:.82rem;margin:10px 0}
+.sum-tbl th{text-align:left;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;padding:4px 8px;border-bottom:1px solid var(--border)}
+.sum-tbl td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+.cred-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.r-ok{color:var(--success)}
+.r-err{color:var(--danger)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+code{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:.8em}
+@media(max-width:700px){.cfg-grid,.cfg-grid.two,.cfg-grid.four,.file-fields{grid-template-columns:1fr!important}.span2{grid-column:span 1}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>Universal Packing List Tool</h1>
+  <p>Any packing list (Excel or PDF) &rarr; Ongoing WMS Purchase Order (inbound) or Order (outbound) &mdash; with direct API upload.</p>
+</div>
+
+<!-- Step 1: Upload -->
+<div class="card">
+  <div class="card-title"><div class="step-num">1</div> Upload Packing List(s)</div>
+  <div class="dz" id="src-dz" onclick="document.getElementById('src-input').click()">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    <p class="primary">Drop Excel or PDF files here, or click to browse</p>
+    <p class="secondary">Multiple files &middot; .xlsx .xls .xlsm .pdf &mdash; any supplier packing list format</p>
+  </div>
+  <input type="file" id="src-input" accept=".xlsx,.xls,.xlsm,.pdf" multiple style="display:none">
+  <div class="file-list" id="file-list"></div>
+</div>
+
+<!-- Extract button -->
+<button class="btn-primary" id="extract-btn" onclick="runExtract()" style="display:none">
+  Extract &amp; Preview &rarr;
+</button>
+
+<!-- Step 2: Configure -->
+<div class="card" id="cfg-card" style="display:none">
+  <div class="card-title"><div class="step-num">2</div> Configure</div>
+
+  <!-- Goods Owner -->
+  <div class="go-row">
+    <div class="field-group" style="flex:2">
+      <label>Goods Owner</label>
+      <select id="cfg-go"></select>
+    </div>
+    <button class="btn-sm" onclick="refreshGoodsOwners()" id="btn-go-refresh" title="Load live list from Ongoing API">&circlearrowleft; Refresh</button>
+    <div id="go-status" style="font-size:.76rem;color:var(--muted);align-self:center;min-width:120px"></div>
+  </div>
+
+  <!-- Type toggle -->
+  <div style="font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Type</div>
+  <div class="type-toggle">
+    <div class="type-btn active-inbound" id="btn-inbound" onclick="setType('inbound')">
+      &#128229; Purchase Order <span style="font-weight:400;font-size:.8em">(Inbound)</span>
+    </div>
+    <div class="type-btn" id="btn-outbound" onclick="setType('outbound')">
+      &#128228; Order <span style="font-weight:400;font-size:.8em">(Outbound)</span>
+    </div>
+  </div>
+
+  <!-- Common fields -->
+  <div class="cfg-grid" id="cfg-common">
+    <div class="field-group">
+      <label id="lbl-docno">Purchase Order Number</label>
+      <input type="text" id="cfg-docno" placeholder="e.g. PK-35">
+      <div class="hint" id="hint-docno">Auto-detected from paperwork &mdash; override if needed.</div>
+    </div>
+    <div class="field-group">
+      <label id="lbl-date">ETA / In-Date</label>
+      <input type="text" id="cfg-date" placeholder="DD/MM/YYYY or YYYY-MM-DD">
+    </div>
+    <div class="field-group">
+      <label>Container / Reference</label>
+      <input type="text" id="cfg-container" placeholder="e.g. MSKU1234567">
+    </div>
+  </div>
+
+  <!-- Inbound-specific fields -->
+  <div id="cfg-inbound-extra">
+    <div class="cfg-grid">
+      <div class="field-group">
+        <label>Supplier Name</label>
+        <input type="text" id="cfg-supplier" placeholder="e.g. Pall Australia">
+      </div>
+      <div class="field-group">
+        <label>Storage Requirements</label>
+        <input type="text" id="cfg-storage" placeholder="e.g. Keep dry &middot; Fragile">
+      </div>
+      <div class="field-group">
+        <label>General Remark</label>
+        <input type="text" id="cfg-remark" placeholder="e.g. Airfreight consignment">
+      </div>
+    </div>
+  </div>
+
+  <!-- Outbound-specific fields -->
+  <div id="cfg-outbound-extra" style="display:none">
+    <div class="cfg-grid four">
+      <div class="field-group">
+        <label>Customer Code <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="cfg-custcode" placeholder="e.g. CA005">
+      </div>
+      <div class="field-group">
+        <label>Customer Name</label>
+        <input type="text" id="cfg-custname" placeholder="e.g. Northern Structure">
+      </div>
+      <div class="field-group">
+        <label>Delivery City / Site</label>
+        <input type="text" id="cfg-city" placeholder="e.g. Gladstone">
+      </div>
+      <div class="field-group">
+        <label>Way of Delivery</label>
+        <select id="cfg-wayofdelivery">
+          <option value="delivery">Delivery</option>
+          <option value="pickup">Pickup</option>
+          <option value="">&mdash; not set &mdash;</option>
+        </select>
+      </div>
+    </div>
+    <div class="cfg-grid two" style="margin-top:10px">
+      <div class="field-group">
+        <label>Order Comment</label>
+        <input type="text" id="cfg-comment" placeholder="e.g. Fragile &mdash; forklift required">
+      </div>
+      <div class="field-group">
+        <label>Delivery Address</label>
+        <input type="text" id="cfg-address" placeholder="e.g. 45 Industrial Dr, Gladstone QLD 4680">
+      </div>
+    </div>
+  </div>
+
+</div><!-- /cfg-card -->
+
+<!-- Step 3: Review -->
+<div class="card" id="review-card" style="display:none">
+  <div class="card-title"><div class="step-num">3</div> Review &amp; Edit</div>
+  <div id="extract-errors"></div>
+  <div class="row-count" id="row-count"></div>
+  <div style="font-size:.73rem;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    Click any cell to edit &mdash; correct tags, quantities, pallets, or PO numbers before generating.
+  </div>
+  <div class="tbl-scroll">
+    <table id="preview-tbl">
+      <thead id="preview-head"></thead>
+      <tbody id="preview-body"></tbody>
+    </table>
+  </div>
+  <button class="btn-add" onclick="addRow()">+ Add row</button>
+</div>
+
+<!-- Step 4: Generate -->
+<div class="card" id="gen-card" style="display:none">
+  <div class="card-title"><div class="step-num">4</div> Generate &amp; Upload</div>
+  <div class="field-group" style="margin-bottom:14px">
+    <label>Output file name</label>
+    <input type="text" id="out-name" placeholder="PackingList_YYYYMMDD.xlsx">
+  </div>
+  <button class="btn-dl" id="btn-dl" onclick="generateExcel()">&ddarr; Download Ongoing WMS Import File</button>
+  <div class="hint" style="text-align:center;margin-bottom:14px" id="dl-hint">
+    Downloads the Ongoing WMS import xlsx &mdash; import via <b>Registers &rarr; Import &rarr; Purchase order</b> (or Order &rarr; Import for outbound).
+  </div>
+  <div class="divider"></div>
+  <button class="btn-api" id="btn-api" onclick="openSubmitModal()">&#128279; Submit Directly to Ongoing WMS</button>
+  <div class="hint" style="text-align:center;margin-bottom:10px" id="api-hint">
+    Creates records directly via the Ongoing REST API &mdash; requires API credentials.
+  </div>
+  <div id="gen-status"></div>
+</div>
+
+<div class="footer">
+  <button onclick="startOver()">Start over</button>
+</div>
+
+</div><!-- /container -->
+
+<!-- Ongoing Submit Modal -->
+<div class="modal-ov" id="submit-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Confirm: Submit to Ongoing WMS
+    </div>
+    <div id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions">
+      <button class="btn-mc" onclick="closeModal()">Cancel</button>
+      <button class="btn-mo" id="btn-mo" onclick="confirmSubmit()">Submit to Ongoing WMS</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// PDF.js worker
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// Constants
+const API_BASE      = 'https://api.ongoingsystems.se/BWSBNE';
+const GO_KEY        = 'univ_goods_owners_v1';
+const CRED_USER_KEY = 'ongoing_user';
+const CRED_PASS_KEY = 'ongoing_pass';
+
+const DEFAULT_GOODS_OWNERS = [
+  {id:78,  name:'Array Technologies'},
+  {id:87,  name:'BWS - POB Warehouse'},
+  {id:93,  name:'SPARK - NEL'},
+  {id:95,  name:'Newmont Stock'},
+  {id:100, name:'Newmont Ghana'},
+  {id:101, name:'Hasting Tech'},
+  {id:102, name:'Blue Water Shipping - Empty Container Depot'},
+  {id:104, name:'Newmont - Empty Container Depot'},
+  {id:105, name:'Alpha HPA'},
+  {id:106, name:'MWGV'},
+  {id:108, name:'PT Freeport - Empty Container Depot'},
+  {id:109, name:'BWS - LAE Empty Container Park'},
+  {id:110, name:'Hudson Global Logistics'},
+  {id:111, name:'BWS PNG Warehouses'},
+  {id:112, name:'SANTOS'},
+  {id:113, name:'Lihir Island - Empty Container Depot'},
+];
+
+// State
+let uid = 1;
+const docs        = [];
+let previewRows   = [];
+let currentType   = 'inbound';
+
+// Helpers
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function setStatus(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
+function parseDisplayDate(s) {
+  if (!s) return '';
+  s = s.trim();
+  const m1 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  if (m1) { const [,d,mo,y] = m1; const yr = y.length===2?'20'+y:y; return `${yr}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`; }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const serial = parseFloat(s);
+  if (serial > 40000 && serial < 65000) {
+    const d = new Date(Math.round((serial - 25569) * 86400000));
+    return d.toISOString().slice(0,10);
+  }
+  return '';
+}
+
+// Goods Owner list
+function getGoodsOwners() {
+  try {
+    const stored = localStorage.getItem(GO_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch(e) {}
+  return DEFAULT_GOODS_OWNERS;
+}
+
+function saveGoodsOwners(list) {
+  try { localStorage.setItem(GO_KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+function populateGoDropdown(list) {
+  const sel = document.getElementById('cfg-go');
+  const prev = sel.value;
+  sel.innerHTML = list.map(o => `<option value="${o.id}">${esc(o.name)} (ID ${o.id})</option>`).join('');
+  if (prev) sel.value = prev;
+}
+
+async function refreshGoodsOwners() {
+  const btn  = document.getElementById('btn-go-refresh');
+  const stat = document.getElementById('go-status');
+  const user = localStorage.getItem(CRED_USER_KEY) || '';
+  const pass = localStorage.getItem(CRED_PASS_KEY) || '';
+  if (!user || !pass) {
+    stat.innerHTML = '<span style="color:var(--warning)">Enter API credentials first (Step 4 &rarr; Submit).</span>';
+    return;
+  }
+  btn.innerHTML = '<span class="spin"></span>';
+  stat.textContent = '';
+  try {
+    const resp = await fetch(API_BASE + '/api/v1/goodsOwners', {
+      headers: { 'Authorization': 'Basic ' + btoa(unescape(encodeURIComponent(user + ':' + pass))) }
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const list = (Array.isArray(data) ? data : (data.goodsOwners || [])).map(o => ({
+      id: o.id || o.goodsOwnerId,
+      name: o.name || o.goodsOwnerName || ('ID ' + (o.id || o.goodsOwnerId))
+    })).filter(o => o.id);
+    if (!list.length) throw new Error('No goods owners returned');
+    saveGoodsOwners(list);
+    populateGoDropdown(list);
+    stat.innerHTML = `<span style="color:var(--success)">&#10003; ${list.length} owners loaded</span>`;
+  } catch(e) {
+    stat.innerHTML = `<span style="color:var(--danger)">&#10007; ${esc(e.message.substring(0,60))}</span>`;
+  } finally {
+    btn.innerHTML = '&circlearrowleft; Refresh';
+  }
+}
+
+// Type toggle
+function setType(t) {
+  currentType = t;
+  document.getElementById('btn-inbound').className  = 'type-btn' + (t==='inbound'  ? ' active-inbound'  : '');
+  document.getElementById('btn-outbound').className = 'type-btn' + (t==='outbound' ? ' active-outbound' : '');
+  document.getElementById('cfg-inbound-extra').style.display  = t==='inbound'  ? '' : 'none';
+  document.getElementById('cfg-outbound-extra').style.display = t==='outbound' ? '' : 'none';
+  document.getElementById('lbl-docno').textContent = t==='inbound' ? 'Purchase Order Number' : 'Order Number';
+  document.getElementById('lbl-date').textContent  = t==='inbound' ? 'ETA / In-Date' : 'Delivery Date';
+  document.getElementById('hint-docno').textContent = 'Auto-detected from paperwork — override if needed.';
+  document.getElementById('dl-hint').innerHTML = t==='inbound'
+    ? 'Downloads xlsx for <b>Registers &rarr; Import &rarr; Purchase order</b> in Ongoing WMS.'
+    : 'Downloads xlsx for <b>Order &rarr; Import</b> in Ongoing WMS.';
+  document.getElementById('api-hint').innerHTML = t==='inbound'
+    ? 'Creates a purchase order via <code>PUT /api/v1/purchaseOrders</code>. Note: pallet labels require Excel import.'
+    : 'Creates outbound orders via <code>PUT /api/v1/orders</code>.';
+  if (previewRows.length) renderTable();
+}
+
+// Drop zone setup
+(function init() {
+  populateGoDropdown(getGoodsOwners());
+  const dz  = document.getElementById('src-dz');
+  const inp = document.getElementById('src-input');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); Array.from(e.dataTransfer.files).forEach(addFile); });
+  inp.addEventListener('change', () => { Array.from(inp.files).forEach(addFile); inp.value = ''; });
+  document.getElementById('submit-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+})();
+
+// File management
+function addFile(file) {
+  const id = uid++;
+  const isPdf = /\.pdf$/i.test(file.name);
+  docs.push({ id, file, name: file.name, isPdf, ref: '', prefix: '', supplier: '', notes: '' });
+  const div = document.createElement('div');
+  div.className = 'file-item';
+  div.id = 'fi-' + id;
+  div.innerHTML = `
+    <div class="file-item-header">
+      <span class="badge ${isPdf?'b-orange':'b-blue'}">${isPdf?'PDF':'Excel'}</span>
+      <span class="file-name" title="${esc(file.name)}">${esc(file.name)}</span>
+      <button class="btn-del" onclick="removeFile(${id})" title="Remove">&times;</button>
+    </div>
+    <div class="file-fields">
+      <div class="field-group">
+        <label>PO / Order Ref <span style="color:var(--muted);font-weight:400;font-size:.78rem">(e.g. PK-35)</span></label>
+        <input type="text" placeholder="e.g. PK-35" oninput="setDoc(${id},'ref',this.value);setDoc(${id},'prefix',this.value);this.closest('.file-item').querySelector('[data-pfx]').value=this.value">
+      </div>
+      <div class="field-group">
+        <label>Pallet Prefix <span style="color:var(--muted);font-weight:400;font-size:.78rem">(auto-filled)</span></label>
+        <input type="text" data-pfx placeholder="e.g. PK-35" oninput="setDoc(${id},'prefix',this.value)">
+      </div>
+      <div class="field-group">
+        <label>Supplier <span style="color:var(--muted);font-weight:400;font-size:.78rem">(optional)</span></label>
+        <input type="text" placeholder="e.g. Pall Australia" oninput="setDoc(${id},'supplier',this.value)">
+      </div>
+      <div class="field-group" style="grid-column:1/-1">
+        <label>Notes</label>
+        <textarea placeholder="e.g. Bay 10 Row 3 &middot; no dimensions &middot; tag suffix: - SP" oninput="setDoc(${id},'notes',this.value)"></textarea>
+      </div>
+    </div>`;
+  document.getElementById('file-list').appendChild(div);
+  document.getElementById('src-dz').classList.add('filled');
+  document.getElementById('extract-btn').style.display = 'block';
+}
+
+function removeFile(id) {
+  const i = docs.findIndex(d => d.id === id);
+  if (i >= 0) docs.splice(i, 1);
+  const el = document.getElementById('fi-' + id);
+  if (el) el.remove();
+  if (!docs.length) {
+    document.getElementById('extract-btn').style.display = 'none';
+    document.getElementById('src-dz').classList.remove('filled');
+  }
+}
+
+function setDoc(id, k, v) { const d = docs.find(x => x.id === id); if (d) d[k] = v.trim(); }
+
+// Number & unit parsers
+const NOT_A_CRATE_RE = /^(floor[\s-]?load\w*|loose|not\s+in\s+(a\s+)?(crate|box)|n\/?a|nil|none|tbd|-+)$/i;
+const _pn = s => { s=String(s).trim(); if(s.includes(',')&&s.includes('.'))s=s.replace(/,/g,''); else if(/,\d{3}(?:,\d{3})*(?:[^0-9]|$)/.test(s))s=s.replace(/,/g,''); else s=s.replace(/,/g,'.'); return parseFloat(s.replace(/[^0-9.]/g,'')); };
+const toM = (v,u) => { const n=_pn(v); if(isNaN(n)||!n)return ''; return u==='mm'?+((n/1000).toFixed(4)):u==='cm'?+((n/100).toFixed(4)):n>20?+((n/1000).toFixed(4)):+(n.toFixed(4)); };
+const toN = v => { if(v===''||v==null)return ''; const n=_pn(v); return isNaN(n)?'':n; };
+const toQty = v => { const s=String(v??'').trim(); if(!s)return ''; const m=s.match(/^([\d,]+(?:[.,]\d+)?)\s*[*×xX]\s*([\d,]+(?:[.,]\d+)?)$/); if(m)return _pn(m[1])*_pn(m[2]); const n=_pn(s); return isNaN(n)?'':n; };
+const unitOf = c => { const s=String(c??'').toLowerCase(); return s.includes('(mm)')||s.endsWith('mm')?'mm':s.includes('(cm)')||s.endsWith('cm')?'cm':null; };
+const extractTagFromDesc = s => {
+  s=String(s||'');
+  let m=s.match(/\b([A-Z0-9]{2,5}-[A-Z]{1,4}-\d{3,}[A-Z0-9]*)\b/i); if(m)return m[1].toUpperCase();
+  m=s.match(/\b([A-Z0-9]{2,5})\s*-\s*([A-Z]{1,4})\s*-\s*(\d{3,}[A-Z0-9]*)\b/i); if(m)return (m[1]+'-'+m[2]+'-'+m[3]).toUpperCase();
+  m=s.match(/\b([A-Z0-9]{2,5})[.\-_]([A-Z0-9]{2,6})[.\-_](\d{3,}[A-Z0-9]*)\b/i); if(m)return (m[1]+'-'+m[2]+'-'+m[3]).toUpperCase();
+  m=s.match(/\b([A-Z0-9]{2,5})[.\-_]([A-Z0-9]{0,3}[A-Z][A-Z0-9]{0,4})(\d{3,})\b/i); if(m)return (m[1]+'-'+m[2]+'-'+m[3]).toUpperCase();
+  return '';
+};
+
+// Header detection
+const KW = {
+  tag:   ['tag no','tag number','tag#','tag','serial no','serial number','rel. part no','rel part no','part no','part number','article no','article number','material no','material number','item no','item number','item code','item','package no','packageno','mark no','markno','drawing no','rpn','your reference','ref no','reference no'],
+  desc:  ['brief description','item description','product description','product type','description','desc'],
+  wt:    ['gross weight','unit net weight','net weight','unit weight','g.w.','gw','weight','n/w','n.w.','g/w'],
+  len:   ['length','l(mm)','l (mm)','l(m)','dim l','l(cm)','packed l'],
+  wid:   ['width','w(mm)','w (mm)','w(m)','dim w','w(cm)','packed w'],
+  hgt:   ['height','heigth','h(mm)','h (mm)','h(m)','dim h','h(cm)','packed h'],
+  crate: ['crate no','crate number','crate','pallet no','pallet','box no','box number','box','carton no','carton','container no','container','packing id','packing no','packing number','comments'],
+  qty:   ['quantity','qty','nos.','nos','no. of items','pcs','pieces'],
+  bay:   ['bay no','bay'],
+  row:   ['storage row','row no','row'],
+  po:    ['purchase order no','purchase order number','purchase order','order no','order number','po no','po number','po#','customer po'],
+  supplier: ['supplier name','supplier','vendor name','vendor','manufacturer'],
+};
+const kw = (c,list) => list.some(k => String(c??'').toLowerCase().trim().includes(k));
+const findHdr = rows => {
+  const lim = Math.min(rows.length, 50);
+  for (let i=0;i<lim;i++) if(rows[i].some(c=>kw(c,KW.tag))&&rows[i].some(c=>kw(c,KW.desc))) return i;
+  for (let i=0;i<lim-1;i++) { const c=[...rows[i],...rows[i+1]]; if(c.some(c=>kw(c,KW.tag))&&c.some(c=>kw(c,KW.desc))) return i; }
+  return -1;
+};
+const buildCM = hdr => {
+  const m={};
+  hdr.forEach((c,i) => { for(const [k,l] of Object.entries(KW)) if(m[k]===undefined&&kw(c,l)) m[k]=i; });
+  hdr.forEach((c,i) => {
+    const s=String(c);
+    if(/equipment\s*(number|no)/i.test(s)||/client\s*(tag|no)\b/i.test(s)) m.tag=i;
+    if(/^\s*material\s*number\b/i.test(s)) m.tag=i;
+  });
+  hdr.forEach((c,i) => {
+    if(/^\s*no\.?\s*$/i.test(String(c))) {
+      if(m.tag!==undefined&&/package\s*no/i.test(String(hdr[m.tag]))) m.crate=m.tag;
+      m.tag=i;
+    }
+  });
+  hdr.forEach((c,i) => { if(/gross\s*weight/i.test(String(c))) m.wt=i; });
+  if(m.hgt!==undefined&&m.hgt===m.len) {
+    m.hgt=undefined;
+    hdr.forEach((c,i) => { if(m.hgt===undefined&&/^\s*h(?:eight|eigth)?\b/i.test(String(c).trim())) m.hgt=i; });
+  }
+  return m;
+};
+
+// Notes parser
+function parseNotes(notes) {
+  const s = String(notes || '').toLowerCase();
+  const tagSuffixM = notes.match(/tag\s+suffix\s*[:=]\s*(\S+(?:\s+-\s+\S+)?)/i);
+  const tagMap = [];
+  const mapM = [...notes.matchAll(/map\s+"?(.+?)"?\s*(?:->|→|=>)\s*"?(\S+)"?/gi)];
+  for (const m of mapM) tagMap.push({ key: m[1].trim().toLowerCase(), tag: m[2].trim() });
+  return {
+    tagSuffix: tagSuffixM ? ' ' + tagSuffixM[1].trim().replace(/^-\s*/,'- ') : '',
+    bay: (notes.match(/bay\s+(\d+)/i)||[])[1] || '',
+    row: (notes.match(/row\s+(\d+)/i)||[])[1] || '',
+    noDims: /no\s+(dimensions?|dims?)/i.test(s),
+    tagMap,
+  };
+}
+
+// Pallet builder
+function mkPallet(prefix, bay, row, crate) {
+  const ep = (prefix||'PK').trim();
+  if (bay && row && crate) return `${ep} Bay ${bay} Row ${row} Crate ${crate}`;
+  const autoSeq = parseInt(crate);
+  if (!isNaN(autoSeq)) return `${ep}-Crate no.${autoSeq}`;
+  return ep + (crate ? ('-' + crate) : '');
+}
+
+// Standard Excel sheet parser
+function _parseXLSheet(ws) {
+  const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+  const hi = findHdr(raw);
+  if (hi<0) return { rows:[], warn:'Could not detect header row — check TAG No and Description columns.' };
+  const hdr=raw[hi], cm=buildCM(hdr);
+  let dataStart=hi+1;
+  if((cm.len===undefined||cm.wid===undefined||cm.hgt===undefined)&&raw[hi+1]) {
+    const sub=raw[hi+1];
+    sub.forEach((c,i)=>{
+      const s=String(c).trim();
+      if(/^l$/i.test(s)&&cm.len===undefined)cm.len=i;
+      else if(/^[wb]$/i.test(s)&&cm.wid===undefined)cm.wid=i;
+      else if(/^h$/i.test(s)&&cm.hgt===undefined)cm.hgt=i;
+    });
+    if(cm.len!==undefined&&cm.wid!==undefined&&cm.hgt!==undefined)dataStart=hi+2;
+  }
+  const dimUnitCell=cm.len!==undefined?hdr[cm.len]||hdr.find(h=>/measurement|dimension/i.test(String(h)))||'':'';
+  const uL=unitOf(cm.len!==undefined?hdr[cm.len]||dimUnitCell:''),uW=unitOf(cm.wid!==undefined?hdr[cm.wid]||dimUnitCell:''),uH=unitOf(cm.hgt!==undefined?hdr[cm.hgt]||dimUnitCell:'');
+  const parseCrateCell = raw => {
+    const s=String(raw??'');
+    const first=s.split(/\r?\n/)[0].trim();
+    if(/^\d+\s+(pallets?|crates?|boxes?)\b/i.test(first))return{num:first,dims:null,wt:null};
+    const num=first.replace(/^(?:crate|box|pallet|carton|case)\s*/i,'').split(/\s/)[0]||first;
+    const dm=s.match(/L\s*x\s*W\s*x\s*H\s*\(?cm[s]?\)?\s*([\d.]+)\s*[x*×]\s*([\d.]+)\s*[x*×]\s*([\d.]+)/i)||s.match(/\b(\d+)\s*[xX×]\s*(\d+)\s*[xX×]\s*(\d+)\s*CM\b/i);
+    const dims=dm?{l:+(parseFloat(dm[1])/100).toFixed(4),w:+(parseFloat(dm[2])/100).toFixed(4),h:+(parseFloat(dm[3])/100).toFixed(4)}:null;
+    const wtM=s.match(/([\d,]+\.?\d*)\s*KG\b/i);
+    const wt=wtM?_pn(wtM[1]):null;
+    const resolved=num||first;
+    return{num:NOT_A_CRATE_RE.test(resolved)?'':resolved,dims,wt};
+  };
+  let cr={num:'',wt:'',len:'',wid:'',hgt:'',bay:'',row:''};
+  const out=[];
+  for(let i=dataStart;i<raw.length;i++){
+    const r=raw[i];
+    let tag=cm.tag!==undefined?String(r[cm.tag]??'').trim():'';
+    const desc=cm.desc!==undefined?String(r[cm.desc]??'').trim():'';
+    const crateRaw=cm.crate!==undefined?r[cm.crate]:'';
+    const{num:crate,dims:crateDims,wt:crateWt}=parseCrateCell(crateRaw);
+    const wt=cm.wt!==undefined?r[cm.wt]:(crateWt!=null?crateWt:'');
+    const lv=cm.len!==undefined?r[cm.len]:(crateDims&&!cm.len?crateDims.l:'');
+    const wv=cm.wid!==undefined?r[cm.wid]:(crateDims&&!cm.wid?crateDims.w:'');
+    const hv=cm.hgt!==undefined?r[cm.hgt]:(crateDims&&!cm.hgt?crateDims.h:'');
+    const bay=cm.bay!==undefined?String(r[cm.bay]??'').trim():'';
+    const row=cm.row!==undefined?String(r[cm.row]??'').trim():'';
+    if(!wt&&!lv&&(cm.wt===undefined||(cm.len===undefined&&cm.wid===undefined))){
+      for(const cell of r){
+        const s=String(cell??'').trim();if(!s||s===crateRaw)continue;
+        const wtM=s.match(/([\d,]+\.?\d*)\s*KG\b/i);
+        const dimM=s.match(/\b(\d+)\s*[xX×]\s*(\d+)\s*[xX×]\s*(\d+)\s*CM\b/i);
+        if(wtM&&cm.wt===undefined)cr.wt=_pn(wtM[1]);
+        if(dimM&&cm.len===undefined){cr.len=+(parseFloat(dimM[1])/100).toFixed(4);cr.wid=+(parseFloat(dimM[2])/100).toFixed(4);cr.hgt=+(parseFloat(dimM[3])/100).toFixed(4);}
+        if(wtM||dimM)break;
+      }
+    }
+    if(!tag&&crate&&(wt||lv||wv||hv)){cr={num:crate,wt:toN(wt)||cr.wt,len:lv||cr.len,wid:wv||cr.wid,hgt:hv||cr.hgt,bay:bay||cr.bay,row:row||cr.row};continue;}
+    if(crate&&crate!==cr.num){cr.num=crate;if(wt)cr.wt=toN(wt);if(lv)cr.len=lv;if(wv)cr.wid=wv;if(hv)cr.hgt=hv;if(bay)cr.bay=bay;if(row)cr.row=row;}
+    if(!tag)tag=extractTagFromDesc(desc);
+    if(!tag&&!desc)continue;
+    out.push({tag,desc,qty:toN(r[cm.qty])||1,
+      wt:toN(wt!==''?wt:cr.wt),len:toM(lv!==''?lv:cr.len,uL),wid:toM(wv!==''?wv:cr.wid,uW),hgt:toM(hv!==''?hv:cr.hgt,uH),
+      crate:cr.num,bay:cr.bay,row:cr.row,
+      detectedPO:cm.po!==undefined?String(r[cm.po]??'').trim():''});
+  }
+  return{rows:out,warn:out.length===0?'No data rows found — check the file has a recognisable header row.':null};
+}
+
+// Valmont Final Packing List parser
+function _parseValmontPackingList(wb, prefix) {
+  const wsName=wb.SheetNames.find(n=>/^packing\s+list$/i.test(n.trim()));
+  if(!wsName)return{rows:[]};
+  const raw=XLSX.utils.sheet_to_json(wb.Sheets[wsName],{header:1,defval:''});
+  let hi=-1;
+  for(let i=0;i<Math.min(raw.length,40);i++){if(raw[i].some(c=>/^\s*top\s+item\s*$/i.test(String(c).trim()))){hi=i;break;}}
+  if(hi<0)return{rows:[]};
+  const hdr=raw[hi];
+  const topIdx=hdr.findIndex(c=>/^\s*top\s+item\s*$/i.test(String(c).trim()));
+  const descIdx=hdr.findIndex(c=>/ingal.*description|ingal.*code.*no|description\s+of\s+item/i.test(String(c)));
+  const qtyIdx=hdr.findIndex(c=>/^\s*qty\s*$/i.test(String(c).trim()));
+  const wtIdx=hdr.findIndex(c=>/gross\s*weight/i.test(String(c)));
+  const orderIdx=hdr.findIndex(c=>/order\s*no/i.test(String(c)));
+  if(topIdx<0||descIdx<0)return{rows:[]};
+  const out=[];let caseWt=null;
+  for(let i=hi+1;i<raw.length;i++){
+    const r=raw[i];
+    const topItem=String(r[topIdx]??'').trim();
+    const desc=String(r[descIdx]??'').trim();
+    if(!topItem&&!desc)continue;
+    const qty=toN(r[qtyIdx])||1;
+    const wt=wtIdx>=0?toN(r[wtIdx]):'';
+    if(/spare|accessory\s+case/i.test(topItem)||/spare|accessory\s+case/i.test(desc)){if(wt)caseWt=wt;continue;}
+    const detectedPO=orderIdx>=0?String(r[orderIdx]??'').trim():'';
+    out.push({tag:topItem||desc,desc,qty,wt,len:'',wid:'',hgt:'',crate:'',bay:'',row:'',detectedPO,prebuiltPallet:''});
+  }
+  const acName=wb.SheetNames.find(n=>/accessory\s+case/i.test(n));
+  if(acName){
+    const acRaw=XLSX.utils.sheet_to_json(wb.Sheets[acName],{header:1,defval:''});
+    let acHi=-1;
+    for(let i=0;i<Math.min(acRaw.length,30);i++){if(acRaw[i].some(c=>/top\s+item/i.test(String(c)))){acHi=i;break;}}
+    if(acHi>=0){
+      const acH=acRaw[acHi];
+      const acTI=acH.findIndex(c=>/top\s+item/i.test(String(c)));
+      const acDI=acH.findIndex(c=>/description/i.test(String(c)));
+      const acQI=acH.findIndex(c=>/quantity/i.test(String(c)));
+      for(let i=acHi+1;i<acRaw.length;i++){
+        const r=acRaw[i];
+        const ti=acTI>=0?String(r[acTI]??'').trim():'';
+        const di=acDI>=0?String(r[acDI]??'').trim():'';
+        const qi=acQI>=0?(toN(r[acQI])||1):1;
+        if(!ti&&!di)continue;
+        out.push({tag:ti||di,desc:di,qty:qi,wt:caseWt||'',len:'',wid:'',hgt:'',crate:'',bay:'',row:'',detectedPO:'',prebuiltPallet:''});
+      }
+    }
+  }
+  return{rows:out,warn:out.length===0?'Valmont PL: no items found.':'Valmont Final Packing List: weights only, no dimensions.'};
+}
+
+// Pall Packing Note parser
+function _parsePallPackingNote(ws, prefix) {
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  let hi=-1;
+  for(let i=0;i<Math.min(raw.length,40);i++){if(raw[i].some(c=>/gross\s*weight/i.test(String(c)))){hi=i;break;}}
+  if(hi<0)return{rows:[],warn:'Packing Note: Gross Weight header not found.'};
+  const hdrA=raw[hi],hdrB=hi+1<raw.length?raw[hi+1]:[];
+  const maxC=Math.max(hdrA.length,hdrB.length);
+  const hdr=Array.from({length:maxC},(_,i)=>{const a=String(hdrA[i]??'').trim(),b=String(hdrB[i]??'').trim();return(a&&b)?a+' '+b:a||b;});
+  const cm=buildCM(hdr);
+  const itemDescIdx=hdr.findIndex(c=>/item\s+description/i.test(String(c)));
+  const pkgNoIdx=hdr.findIndex(c=>/package\s+no/i.test(String(c)));
+  const itemQtyIdx=hdr.findIndex(c=>/item\s+quantity/i.test(String(c)));
+  if(itemDescIdx>=0)cm.tag=itemDescIdx;
+  if(pkgNoIdx>=0)cm.crate=pkgNoIdx;
+  if(itemQtyIdx>=0)cm.qty=itemQtyIdx;
+  const ep=(prefix||'PK').trim();
+  const out=[];
+  for(let i=hi+2;i<raw.length;i++){
+    const r=raw[i];
+    if(!r.some(c=>String(c).trim()))continue;
+    const tag=cm.tag!==undefined?String(r[cm.tag]??'').trim():'';
+    if(!tag)continue;
+    const pkgNo=cm.crate!==undefined?String(r[cm.crate]??'').trim():'';
+    if(/^(total|subtotal|delivery|remarks|packing list)$/i.test(pkgNo))continue;
+    if(/^(total|subtotal|delivery|remarks|packing list)$/i.test(tag))continue;
+    const wt=cm.wt!==undefined?r[cm.wt]:'';
+    if(/^(kgs?|mm|cm)$/i.test(String(wt).trim()))continue;
+    const lv=cm.len!==undefined?r[cm.len]:'',wv=cm.wid!==undefined?r[cm.wid]:'',hv=cm.hgt!==undefined?r[cm.hgt]:'';
+    out.push({tag,desc:tag,qty:toN(r[cm.qty])||1,wt:toN(wt),len:toM(lv,null),wid:toM(wv,null),hgt:toM(hv,null),crate:'',bay:'',row:'',prebuiltPallet:pkgNo?ep+' '+pkgNo:'',detectedPO:''});
+  }
+  return{rows:out,warn:out.length===0?'Packing Note found but no items extracted.':null};
+}
+
+// CASE-tab parser (Suntech / Wuxi bilingual)
+function _parseCaseSheets(wb, caseNames, prefix) {
+  const ep=(prefix||'PK').trim();
+  const usePrefixSpace=/case\s*$/i.test(ep);
+  const out=[];
+  for(const sn of caseNames){
+    const ws=wb.Sheets[sn];if(!ws)continue;
+    const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    const cnM=sn.trim().match(/^CASE\s*(\d+)$/i);
+    const caseNum=cnM?cnM[1]:sn.trim();
+    const palletName=usePrefixSpace?ep+' '+caseNum:ep+'-'+sn.trim();
+    let pWt='',pL='',pW='',pH='';
+    for(let i=0;i<Math.min(raw.length,12);i++){
+      if(!/dimension/i.test(raw[i].map(c=>String(c)).join('|')))continue;
+      for(const cell of raw[i]){
+        const s=String(cell);
+        const dm=s.match(/(\d+)\s*[xX×]\s*(\d+)\s*[xX×]\s*(\d+)/);
+        if(dm){pL=toM(dm[1],'mm');pW=toM(dm[2],'mm');pH=toM(dm[3],'mm');}
+        const wm=s.match(/(\d+)\s*\/\s*(\d+)/);
+        if(wm)pWt=parseFloat(wm[2]);
+      }
+      break;
+    }
+    let hi=findHdr(raw);if(hi<0)continue;
+    let hdr=raw[hi],cm=buildCM(hdr);
+    if(cm.tag===undefined&&cm.desc===undefined&&hi+1<raw.length){hi=hi+1;hdr=raw[hi];cm=buildCM(hdr);}
+    const tagNoIdx=hdr.findIndex(c=>/\btag\s*(no\.?|number)\b/i.test(String(c)));
+    if(tagNoIdx>=0)cm.tag=tagNoIdx;
+    for(let i=hi+1;i<raw.length;i++){
+      const r=raw[i];
+      if(!r.some(c=>String(c).trim()))continue;
+      let tag=cm.tag!==undefined?String(r[cm.tag]??'').trim():'';
+      const desc=cm.desc!==undefined?String(r[cm.desc]??'').trim():'';
+      if(!tag&&!desc)continue;
+      if(!tag)tag=extractTagFromDesc(desc);
+      if(!tag&&!desc)continue;
+      if(/^(total|sub[-\s]?total|remarks|material|item\s*no)$/i.test(tag))continue;
+      if(/^(the\s+contents|suntech\s+rep|signature|packing\s+list\s+no|checked\s+by|date:)/i.test(tag))continue;
+      if(/^\//.test(tag))continue;
+      if(tag.split(/\s+/).length>8)continue;
+      out.push({tag,desc,qty:toQty(r[cm.qty])||1,wt:pWt,len:pL,wid:pW,hgt:pH,crate:'',bay:'',row:'',prebuiltPallet:palletName,detectedPO:''});
+    }
+  }
+  return{rows:out,warn:out.length===0?'CASE sheets found but no items extracted.':'CASE-tab format: all tagged items extracted. Pallet-level weight/dims shown — edit individual rows as needed.'};
+}
+
+// tryParseGroupedCrate (CIPL/Bray PDF style)
+function tryParseGroupedCrate(allItems) {
+  const crateItems=allItems.filter(i=>/^Crate\s+\d+$/i.test(i.text)&&i.x<120).sort((a,b)=>a.y-b.y);
+  if(!crateItems.length)return null;
+  if(!allItems.some(i=>extractTagFromDesc(i.text)))return null;
+  const seen=new Set();
+  const dedup=crateItems.filter(c=>{const k=c.text.toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+  const avgGap=dedup.length>1?(dedup[dedup.length-1].y-dedup[0].y)/(dedup.length-1):200;
+  const pageEnd=dedup[dedup.length-1].y+avgGap*2;
+  const BELOW_PENALTY=8;
+  const nearestCrate=itemY=>{let best=dedup[0],bestS=Infinity;for(const c of dedup){const d=Math.abs(itemY-c.y);const s=d+(itemY>c.y?BELOW_PENALTY:0);if(s<bestS){bestS=s;best=c;}}return best;};
+  const NOISE=/^(packing\s+list|commercial\s+invoice|delivery\s+docket|page\s+\d)/i;
+  const allDescCands=allItems.filter(i=>i.x>200&&i.text.length>6&&!NOISE.test(i.text)&&!/^\d{4}\.\d{2}/.test(i.text)&&!/^[A-Z0-9]{2,5}-[A-Z]{1,4}-\d/.test(i.text)&&i.y<pageEnd);
+  const descX=allDescCands.length?Math.min(...allDescCands.map(i=>i.x)):300;
+  const ctMap=new Map(dedup.map(c=>[c,[]]));
+  for(const item of allItems){
+    if(item.y>=pageEnd)continue;if(item.x<=80||item.x>=descX)continue;
+    ctMap.get(nearestCrate(item.y)).push(item);
+  }
+  const rows=[];
+  for(const crate of dedup){
+    const tagZone=ctMap.get(crate);
+    const rawTagText=tagZone.sort((a,b)=>a.y!==b.y?a.y-b.y:a.x-b.x).map(i=>i.text).join(' ').replace(/-\s+/g,'-').replace(/\s+-/g,'-');
+    const tags=[];
+    for(const tok of rawTagText.split(',')){ for(const word of tok.trim().split(/\s+/)){ const t=extractTagFromDesc(word); if(t&&!tags.includes(t))tags.push(t); } }
+    if(!tags.length)continue;
+    const nearY=allItems.filter(i=>Math.abs(i.y-crate.y)<20&&i.y<pageEnd);
+    const descItems=nearY.filter(i=>i.x>=descX-20&&!NOISE.test(i.text)&&!/^\d{4}\.\d{2}/.test(i.text)&&i.text.length>4);
+    const desc=descItems.length?descItems.sort((a,b)=>Math.abs(a.x-descX)-Math.abs(b.x-descX))[0].text:'';
+    const dimNums=nearY.filter(i=>i.x>60&&i.x<125&&/^\d+$/.test(i.text)).sort((a,b)=>a.x-b.x);
+    const lVal=dimNums[0]?toM(dimNums[0].text,'mm'):'',wVal=dimNums[1]?toM(dimNums[1].text,'mm'):'',hVal=dimNums[2]?toM(dimNums[2].text,'mm'):'';
+    const wtItem=nearY.find(i=>i.x>460&&i.x<515&&/^\d+$/.test(i.text));
+    const wt=wtItem?parseFloat(wtItem.text):'';
+    const crateNum=crate.text.replace(/^Crate\s+/i,'');
+    for(const tag of tags) rows.push({tag,desc,qty:1,wt,len:lVal,wid:wVal,hgt:hVal,crate:crateNum,bay:'',row:'',detectedPO:''});
+  }
+  return rows.length?rows:null;
+}
+
+// tryParseDeliveryDocket (KIOSK)
+function tryParseDeliveryDocket(allItems) {
+  if(!allItems.some(i=>/kiosk/i.test(i.text)))return null;
+  const ki=allItems.findIndex(i=>/^KIOSK\s*#?$/i.test(i.text));if(ki<0)return null;
+  const kItem=allItems[ki];
+  const numParts=allItems.filter(i=>i.x>kItem.x&&Math.abs(i.y-kItem.y)<6&&/^\d+$/.test(i.text)).sort((a,b)=>a.x-b.x);
+  const tag='KIOSK #'+numParts.map(i=>i.text).join('');
+  const typeIdx=allItems.findIndex(i=>/type\s+of\s+package/i.test(i.text));
+  let desc=tag;
+  if(typeIdx>=0){const ty=allItems[typeIdx].y;const d=allItems.find(i=>i.x>allItems[typeIdx].x+20&&Math.abs(i.y-ty)<6);if(d)desc=d.text;}
+  const wtIdx=allItems.findIndex(i=>/^Weight:?$/i.test(i.text));
+  let wt='';
+  if(wtIdx>=0){const wy=allItems[wtIdx].y;const wtNums=allItems.filter(i=>i.x>allItems[wtIdx].x&&Math.abs(i.y-wy)<6&&/^[\d,.]+$/.test(i.text)).sort((a,b)=>a.x-b.x).map(i=>i.text).join('');if(wtNums)wt=parseFloat(wtNums.replace(/,/g,''));}
+  const lenH=allItems.find(i=>/^length$/i.test(i.text)),widH=allItems.find(i=>/^width$/i.test(i.text)),hgtH=allItems.find(i=>/^height$/i.test(i.text));
+  let len='',wid='',hgt='';
+  if(lenH&&widH&&hgtH){const hY=lenH.y;const uI=allItems.find(i=>i.y>=hY-5&&i.y<=hY+5&&/\(m\)/i.test(i.text));const u=uI?'m':null;const gN=hX=>allItems.filter(i=>Math.abs(i.x-hX)<40&&i.y>hY+3&&i.y<hY+40&&/^[\d.]+$/.test(i.text)).sort((a,b)=>a.x-b.x).map(i=>i.text).join('');len=gN(lenH.x)?toM(gN(lenH.x),u):'';wid=gN(widH.x)?toM(gN(widH.x),u):'';hgt=gN(hgtH.x)?toM(gN(hgtH.x),u):'';}
+  return[{tag,desc,qty:1,wt,len,wid,hgt,crate:'',bay:'',row:'',detectedPO:''}];
+}
+
+// tryParseAlfaLavalPL
+function tryParseAlfaLavalPL(allItems) {
+  if(!allItems.some(i=>/Gross\s*W\s*\(kgs\)/i.test(i.text)))return null;
+  if(!allItems.some(i=>/Cust\.?\s*Item:/i.test(i.text)))return null;
+  const gwL=allItems.find(i=>/Gross\s*W\s*\(kgs\)/i.test(i.text));
+  let grossWt='';
+  if(gwL){const wI=allItems.find(i=>Math.abs(i.x-gwL.x)<50&&i.y>gwL.y&&i.y<gwL.y+30&&/^[\d,]+\.?\d*$/.test(i.text));if(wI)grossWt=_pn(wI.text);}
+  const dL=allItems.find(i=>/L\s*\(cm\)\s*\*\s*W\s*\(cm\)\s*\*\s*H\s*\(cm\)/i.test(i.text));
+  let pLen='',pWid='',pHgt='';
+  if(dL){const dV=allItems.find(i=>Math.abs(i.x-dL.x)<30&&i.y>dL.y&&i.y<dL.y+30);if(dV){const dm=dV.text.match(/([\d,]+)\s*\*\s*([\d,]+)\s*\*\s*([\d,]+)/);if(dm){pLen=toM(dm[1],'cm');pWid=toM(dm[2],'cm');pHgt=toM(dm[3],'cm');}}}
+  const idH=allItems.find(i=>/^Item\s+Description$/i.test(i.text));
+  const descY=idH?idH.y:0;
+  const rows=[];
+  for(const cL of allItems.filter(i=>/Cust\.?\s*Item:/i.test(i.text))){
+    const tag=extractTagFromDesc(cL.text);if(!tag)continue;
+    const descCands=allItems.filter(i=>i.y>=descY&&i.y<cL.y&&i.x>90&&i.text.length>8&&!/^(Serial|Cust\.?\s*Item|Customer|Net\s+weight|Manufacturers|Suppliers|Your\s+Ref)/i.test(i.text)&&!/^[\d,\.]+$/.test(i.text)&&/[a-z]{3,}/i.test(i.text));
+    let desc='';if(descCands.length){desc=descCands.sort((a,b)=>a.y-b.y)[0].text;desc=desc.replace(/\s+incl\..*$/i,'').replace(/\s+including.*$/i,'').trim();}
+    rows.push({tag,desc,qty:1,wt:grossWt,len:pLen,wid:pWid,hgt:pHgt,crate:'',bay:'',row:'',detectedPO:''});
+  }
+  return rows.length?rows:null;
+}
+
+// OCR fallback
+async function tryParseWithOCR(pdf) {
+  if(!window.Tesseract){
+    await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=()=>rej(new Error('Tesseract.js failed to load'));document.head.appendChild(s);});
+  }
+  let fullText='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);const vp=page.getViewport({scale:2});
+    const canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;
+    await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+    try{const w=await Tesseract.createWorker('eng');const{data:{text}}=await w.recognize(canvas);await w.terminate();fullText+='\n'+text;}catch(e){}
+  }
+  if(!fullText.trim())return null;
+  const codeRe=/\b([A-Z0-9]{2,5}-[A-Z]{1,4}-\d{3,}[A-Z0-9]*)\b/gi;
+  const tags=[...new Set([...fullText.matchAll(codeRe)].map(m=>m[1]))];
+  if(!tags.length)return null;
+  return{rows:tags.map(tag=>({tag,desc:'',qty:1,wt:'',len:'',wid:'',hgt:'',crate:'',bay:'',row:'',detectedPO:''})),warn:'OCR: tag codes only — descriptions and dimensions need manual entry.'};
+}
+
+// Main Excel dispatcher
+function parseXL(buf, prefix) {
+  const wb=XLSX.read(buf,{type:'array'});
+  const caseNames=wb.SheetNames.filter(n=>/^CASE\s*\d+$/i.test(n.trim()));
+  if(caseNames.length>0){const cr=_parseCaseSheets(wb,caseNames,prefix);if(cr.rows.length>0)return cr;}
+  if(wb.SheetNames.some(n=>/^packing\s+list$/i.test(n.trim()))){const vr=_parseValmontPackingList(wb,prefix);if(vr.rows.length>0)return vr;}
+  let result=_parseXLSheet(wb.Sheets[wb.SheetNames[0]]);
+  if(result.rows.length>0)return result;
+  if(wb.Sheets['Packing Note']){const pr=_parsePallPackingNote(wb.Sheets['Packing Note'],prefix);if(pr.rows.length>0)return pr;}
+  return result;
+}
+
+// Main PDF parser
+async function parsePDF(buf) {
+  const lib=window.pdfjsLib;
+  if(!lib)throw new Error('PDF.js did not load — check internet connection.');
+  lib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf=await lib.getDocument({data:new Uint8Array(buf)}).promise;
+  const allItems=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);const vp=page.getViewport({scale:1});const tc=await page.getTextContent();
+    const off=(p-1)*vp.height;
+    tc.items.filter(i=>i.str&&i.str.trim()).forEach(i=>allItems.push({text:i.str.trim(),x:i.transform[4],y:off+(vp.height-i.transform[5])}));
+  }
+  if(!allItems.length){const ocr=await tryParseWithOCR(pdf);if(ocr)return ocr;return{rows:[],warn:'No text found in PDF — file may be scanned/image-only.'}}
+  allItems.sort((a,b)=>a.y!==b.y?a.y-b.y:a.x-b.x);
+
+  const alfaR=tryParseAlfaLavalPL(allItems);if(alfaR)return{rows:alfaR};
+
+  const TOL=5;const rawRows=[];let cur=[allItems[0]],curY=allItems[0].y;
+  for(let i=1;i<allItems.length;i++){
+    if(Math.abs(allItems[i].y-curY)<=TOL)cur.push(allItems[i]);
+    else{rawRows.push(cur.sort((a,b)=>a.x-b.x));cur=[allItems[i]];curY=allItems[i].y;}
+  }
+  if(cur.length)rawRows.push(cur.sort((a,b)=>a.x-b.x));
+  const textRows=rawRows.map(r=>r.map(i=>i.text));
+  const hi=findHdr(textRows);
+  if(hi<0){
+    const gcR=tryParseGroupedCrate(allItems);if(gcR&&gcR.length)return{rows:gcR};
+    const ddR=tryParseDeliveryDocket(allItems);if(ddR&&ddR.length)return{rows:ddR};
+    return{rows:[],warn:'Could not detect table header in PDF — add rows manually.'};
+  }
+  const hdrItems=rawRows[hi];
+  let combinedHdrText=[...textRows[hi]];let dataStart=hi+1;
+  for(let ci=hi+1;ci<Math.min(hi+4,rawRows.length);ci++){
+    const nextRow=rawRows[ci];
+    if(!nextRow.every(item=>item.text.length<25&&!/^\d+[\d.,]*$/.test(item.text)))break;
+    for(const item of nextRow){let bI=0,bD=Infinity;hdrItems.forEach((h,idx)=>{const d=Math.abs(h.x-item.x);if(d<bD){bD=d;bI=idx;}});if(bD<80)combinedHdrText[bI]=(combinedHdrText[bI]+' '+item.text).trim();}
+    dataStart=ci+1;
+  }
+  const cm=buildCM(combinedHdrText);
+  if(cm.tag===undefined)return{rows:[],warn:'No tag/part/serial column found in PDF — add rows manually.'};
+
+  let cr2={num:'',wt:'',len:'',wid:'',hgt:'',bay:'',row:''};
+  const uL2=unitOf(cm.len!==undefined?combinedHdrText[cm.len]:''),uW2=unitOf(cm.wid!==undefined?combinedHdrText[cm.wid]:''),uH2=unitOf(cm.hgt!==undefined?combinedHdrText[cm.hgt]:'');
+  const out2=[];
+  for(let i=dataStart;i<rawRows.length;i++){
+    const row=rawRows[i];const cells={};
+    for(const it of row){
+      let best=-1,bestD=Infinity;
+      hdrItems.forEach((h,idx)=>{const d=Math.abs(h.x-it.x);if(d<bestD){bestD=d;best=idx;}});
+      if(best<0||bestD>60)continue;
+      const k=best;
+      if(!cells[k])cells[k]=it.text;else cells[k]+=' '+it.text;
+    }
+    const getText=idx=>(idx!==undefined&&cells[idx]!==undefined)?String(cells[idx]).trim():'';
+    let tag=getText(cm.tag);const desc=getText(cm.desc);
+    if(!tag)tag=extractTagFromDesc(desc);
+    if(!tag&&!desc)continue;
+    const crateRaw=getText(cm.crate);
+    const crate=NOT_A_CRATE_RE.test(crateRaw)?'':crateRaw;
+    if(crate&&crate!==cr2.num)cr2.num=crate;
+    const wt=getText(cm.wt)||cr2.wt;
+    const lv=getText(cm.len)||cr2.len,wv=getText(cm.wid)||cr2.wid,hv=getText(cm.hgt)||cr2.hgt;
+    out2.push({tag,desc,qty:toN(getText(cm.qty))||1,
+      wt:toN(wt),len:toM(lv,uL2),wid:toM(wv,uW2),hgt:toM(hv,uH2),
+      crate:cr2.num,bay:'',row:'',detectedPO:getText(cm.po)});
+  }
+  if(!out2.length){
+    const gcR2=tryParseGroupedCrate(allItems);if(gcR2&&gcR2.length)return{rows:gcR2};
+    return{rows:[],warn:'No data rows found in PDF — add rows manually.'};
+  }
+  return{rows:out2};
+}
+
+// dedup tags
+function dedupTags(rows) {
+  const tds={};rows.forEach(r=>{if(!tds[r.tag])tds[r.tag]=new Set();tds[r.tag].add(r.desc||'');});
+  const ti={};
+  return rows.map(r=>{if((tds[r.tag]||new Set()).size<=1)return r;ti[r.tag]=(ti[r.tag]||0)+1;return{...r,tag:r.tag+'-'+ti[r.tag]};});
+}
+
+// Extract / Run
+async function runExtract() {
+  const btn=document.getElementById('extract-btn');
+  btn.innerHTML='<span class="spin"></span> Reading files…';btn.disabled=true;
+  let all=[],errors=[];
+  for(const doc of docs){
+    try{
+      const buf=await doc.file.arrayBuffer();
+      const effectivePrefix=(doc.prefix||doc.ref||'PK').trim();
+      const{rows,warn}=doc.isPdf?await parsePDF(buf):parseXL(buf,effectivePrefix);
+      if(warn)errors.push(`<b>${esc(doc.name)}</b> — ${esc(warn)}`);
+      const ni=parseNotes(doc.notes);
+      let autoSeq=0;
+      all=all.concat(rows.map(r=>{
+        let tag=r.tag;
+        if(ni.tagMap.length){const dl=(r.desc||'').toLowerCase();const found=ni.tagMap.find(e=>dl.includes(e.key));if(found)tag=found.tag;}
+        if(ni.tagSuffix&&tag)tag=tag+ni.tagSuffix;
+        const rawCrate=NOT_A_CRATE_RE.test(String(r.crate||'').trim())?'':r.crate;
+        const effectiveCrate=rawCrate!==''?rawCrate:String(++autoSeq);
+        return{
+          id:uid++,tag,desc:r.desc,qty:r.qty,
+          wt:r.wt,len:ni.noDims?'':r.len,wid:ni.noDims?'':r.wid,hgt:ni.noDims?'':r.hgt,
+          pallet:(r.prebuiltPallet!==undefined)?r.prebuiltPallet:mkPallet(effectivePrefix,r.bay||ni.bay,r.row||ni.row,effectiveCrate),
+          po:doc.ref||r.detectedPO||'',
+          supplier:doc.supplier||'',
+          rowComment:''
+        };
+      }));
+    }catch(e){errors.push(`<b>${esc(doc.name)}</b> — ${esc(e.message)}`);}
+  }
+  previewRows=dedupTags(all);
+  const poFreq={};previewRows.forEach(r=>{if(r.po)(poFreq[r.po]=(poFreq[r.po]||0)+1);});
+  const topPO=Object.entries(poFreq).sort((a,b)=>b[1]-a[1])[0];
+  const poField=document.getElementById('cfg-docno');
+  if(!poField.value&&topPO)poField.value=topPO[0];
+  if(!document.getElementById('out-name').value){
+    const base=topPO?topPO[0].replace(/[^A-Za-z0-9_-]/g,'_'):('PL_'+new Date().toISOString().slice(0,10).replace(/-/g,''));
+    document.getElementById('out-name').value=base+'_import.xlsx';
+  }
+  setStatus('extract-errors',errors.length?`<div class="err-box">${errors.join('<br>')}</div>`:'');
+  document.getElementById('row-count').textContent=previewRows.length+' rows extracted';
+  document.getElementById('cfg-card').style.display='block';
+  renderTable();
+  document.getElementById('review-card').style.display='block';
+  document.getElementById('gen-card').style.display='block';
+  btn.innerHTML='Extract &amp; Preview &rarr;';btn.disabled=false;
+  document.getElementById('cfg-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Review table
+function renderTable() {
+  const thead=document.getElementById('preview-head');
+  const tbody=document.getElementById('preview-body');
+  const isIn=currentType==='inbound';
+  const lastCol=isIn?'<th>Pallet Label</th><th>PO Number</th><th>Supplier</th>':'<th>Row Comment</th>';
+  thead.innerHTML=`<tr><th>Tag / Article #</th><th>Description</th><th>Qty</th><th>Weight (kg)</th><th>L (m)</th><th>W (m)</th><th>H (m)</th>${lastCol}<th></th></tr>`;
+  tbody.innerHTML='';
+  previewRows.forEach(r=>tbody.appendChild(mkTr(r)));
+  document.getElementById('row-count').textContent=previewRows.length+' rows';
+}
+
+function mkTr(r) {
+  const tr=document.createElement('tr');tr.id='tr-'+r.id;
+  const isIn=currentType==='inbound';
+  const base=['tag','desc','qty','wt','len','wid','hgt'];
+  const extra=isIn?['pallet','po','supplier']:['rowComment'];
+  const fields=[...base,...extra];
+  tr.innerHTML=fields.map(f=>`<td><input type="text" value="${esc(String(r[f]??''))}" oninput="upd(${r.id},'${f}',this.value)"></td>`).join('')
+    +`<td><button class="btn-del" onclick="delR(${r.id})">&times;</button></td>`;
+  return tr;
+}
+
+function upd(id,k,v){const r=previewRows.find(x=>x.id===id);if(r)r[k]=v;}
+function delR(id){previewRows=previewRows.filter(r=>r.id!==id);const t=document.getElementById('tr-'+id);if(t)t.remove();document.getElementById('row-count').textContent=previewRows.length+' rows';}
+function addRow(){
+  const r={id:uid++,tag:'',desc:'',qty:1,wt:'',len:'',wid:'',hgt:'',pallet:'',po:document.getElementById('cfg-docno').value||'',supplier:'',rowComment:''};
+  previewRows.push(r);
+  document.getElementById('preview-body').appendChild(mkTr(r));
+  document.getElementById('row-count').textContent=previewRows.length+' rows';
+}
+
+// Generate Purchase Order xlsx (Ongoing inbound import format)
+function generatePOXlsx() {
+  const ONG_HEADERS=['OrderNo','InDate','OrderDate','Reference','Container','CustomerNumber','RowNumber','RowId','ArticleNumber','ArticleName','BarCode','NumberOfItems','InvoiceNumber','RowPrice','RowBatchNo','RowSerialNumber','SupplierNumber','SupplierName','SupplierAddress','SupplierAddress2','SupplierAddress3','SupplierPostCode','SupplierCity','SupplierCountryCode','SupplierPhone','SupplierEmail','ArticleItemPalletItem.LabelId','Weight','Length','Width','Height','InOrderLine.ExternalOrderLineCode'];
+  const I={OrderNo:0,InDate:1,Reference:3,Container:4,ArticleNumber:8,ArticleName:9,NumberOfItems:11,SupplierName:17,LabelId:26,Weight:27,Length:28,Width:29,Height:30,ExtLineCode:31};
+
+  const globalPO=document.getElementById('cfg-docno').value.trim();
+  const inDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
+  const supplier=document.getElementById('cfg-supplier').value.trim();
+  const container=document.getElementById('cfg-container').value.trim();
+  const remark=document.getElementById('cfg-remark').value.trim();
+
+  const dataRows=previewRows.map((r,idx)=>{
+    const row=new Array(ONG_HEADERS.length).fill('');
+    row[I.OrderNo]      =r.po||globalPO;
+    row[I.InDate]       =inDate;
+    row[I.Reference]    =remark;
+    row[I.Container]    =container;
+    row[I.ArticleNumber]=r.tag;
+    row[I.ArticleName]  =r.desc;
+    row[I.NumberOfItems]=r.qty!==''&&r.qty!=null?Number(r.qty):'';
+    row[I.SupplierName] =r.supplier||supplier;
+    row[I.LabelId]      =r.pallet;
+    row[I.Weight]       =r.wt!==''&&r.wt!=null?Number(r.wt):'';
+    row[I.Length]       =r.len!==''&&r.len!=null?Number(r.len):'';
+    row[I.Width]        =r.wid!==''&&r.wid!=null?Number(r.wid):'';
+    row[I.Height]       =r.hgt!==''&&r.hgt!=null?Number(r.hgt):'';
+    row[I.ExtLineCode]  =String(idx+1);
+    return row;
+  });
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([ONG_HEADERS,...dataRows]),'Data');
+  return wb;
+}
+
+// Generate Order xlsx (Ongoing outbound order import format)
+function generateOrderXlsx() {
+  const hdrs=['CustomerNumber','DeliveryDate','Reference','TranporterOrderNumber','OrderNo','ArticleNumber','ArticleName','OrderRowBatchNo','NumberOfItems','OrderComment','OrderRowComment','SalesCode','OrderDeliveryInstruction','CustomerOrderNumber','WayOfDelivery','Transporter.TransporterCode','Transporter.TransporterServiceCode','Transporter.TransporterCustomerNumber','Customer.Name','Customer.Address','Customer.Address2','Customer.Address3','Customer.PostCode','Customer.City','Customer.TelePhone','Customer.Remark','Customer.Email','Customer.MobilePhone','Customer.CountryCode','Customer.CountryName','Customer.CountryStateCode','Customer.DeliveryInstruction','Customer.NotifyBySMS','Customer.NotifyByEmail','Customer.NotifyByTelephone'];
+
+  const orderNo=document.getElementById('cfg-docno').value.trim();
+  const isoDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
+  const custCode=document.getElementById('cfg-custcode').value.trim();
+  const custName=document.getElementById('cfg-custname').value.trim();
+  const city=document.getElementById('cfg-city').value.trim();
+  const wod=document.getElementById('cfg-wayofdelivery').value;
+  const comment=document.getElementById('cfg-comment').value.trim();
+  const address=document.getElementById('cfg-address').value.trim();
+
+  const data=previewRows.map((r,i)=>{
+    const row=new Array(hdrs.length).fill('');
+    row[0]=custCode; row[1]=isoDate||''; row[4]=orderNo;
+    row[5]=r.tag; row[6]=r.desc; row[8]=r.qty!==''?Number(r.qty):'';
+    row[9]=i===0?comment:''; row[10]=r.rowComment||'';
+    row[14]=wod; row[18]=i===0?custName:'';
+    row[19]=i===0?address:''; row[23]=i===0?city:'';
+    return row;
+  });
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdrs,...data]),'Data');
+  return wb;
+}
+
+// Download
+function generateExcel() {
+  if(!previewRows.length){alert('No rows to export.');return;}
+  const fname=document.getElementById('out-name').value.trim()||'PackingList_import.xlsx';
+  const wb=currentType==='inbound'?generatePOXlsx():generateOrderXlsx();
+  XLSX.writeFile(wb,fname);
+  const pos=[...new Set(previewRows.map(r=>r.po).filter(Boolean))];
+  const globalPO=document.getElementById('cfg-docno').value.trim();
+  const allPos=[...new Set([...pos,globalPO].filter(Boolean))];
+  const hint=currentType==='inbound'
+    ?`Import via <b>Registers &rarr; Import &rarr; Purchase order</b> in Ongoing WMS.<br><span style="color:var(--muted)">Note: pallet labels (LabelId column) require the Excel import — they cannot be set via API.</span>`
+    :`Import via <b>Order &rarr; Import</b> in Ongoing WMS.`;
+  setStatus('gen-status',`<div class="ok-box">&#10003; <b>${esc(fname)}</b> downloaded — ${previewRows.length} rows${allPos.length?', PO/Order: <b>'+allPos.map(esc).join(', ')+'</b>':''}.<br>${hint}</div>`);
+}
+
+// Submit modal
+function openSubmitModal() {
+  if(!previewRows.length){alert('No rows to submit.');return;}
+  const isIn=currentType==='inbound';
+  const docNo=document.getElementById('cfg-docno').value.trim();
+  const goSel=document.getElementById('cfg-go');
+  const goName=goSel.options[goSel.selectedIndex]?.text||'';
+  const goId=goSel.value;
+  const savedU=localStorage.getItem(CRED_USER_KEY)||'Tnix';
+  const savedP=localStorage.getItem(CRED_PASS_KEY)||'';
+
+  const summaryRows=isIn
+    ?`<tr><td>Purchase Order</td><td><b>${esc(docNo||'(not set)')}</b></td></tr>
+       <tr><td>Lines</td><td>${previewRows.length}</td></tr>
+       <tr><td>ETA</td><td>${esc(document.getElementById('cfg-date').value||'—')}</td></tr>
+       <tr><td>Supplier</td><td>${esc(document.getElementById('cfg-supplier').value||'—')}</td></tr>`
+    :(()=>{
+      const orderNo=docNo;
+      return `<tr><td>Order Number</td><td><b>${esc(orderNo||'(not set)')}</b></td></tr>
+              <tr><td>Lines</td><td>${previewRows.length}</td></tr>
+              <tr><td>Delivery Date</td><td>${esc(document.getElementById('cfg-date').value||'—')}</td></tr>
+              <tr><td>Customer</td><td>${esc(document.getElementById('cfg-custcode').value||'—')} ${esc(document.getElementById('cfg-custname').value||'')}</td></tr>`;
+    })();
+
+  document.getElementById('modal-body').innerHTML=`
+    <div class="warn-box" style="margin-bottom:14px">
+      &#9888; This will create real records in <b>Ongoing WMS (${isIn?'Purchase Order':'Outbound Order'})</b>.<br>
+      Goods Owner: <b>${esc(goName)}</b> (ID ${esc(goId)})<br>
+      ${isIn?'Note: pallet labels (LabelId) cannot be set via API — download Excel for pallet import.':''}
+    </div>
+    <table class="sum-tbl"><tbody>${summaryRows}</tbody></table>
+    <div style="margin-top:14px;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Ongoing API Credentials</div>
+    <div class="cred-row">
+      <div class="field-group"><label>Username</label><input type="text" id="ong-user" value="${esc(savedU)}" autocomplete="off" spellcheck="false"></div>
+      <div class="field-group"><label>Password</label><input type="password" id="ong-pass" value="${esc(savedP)}" autocomplete="off"></div>
+    </div>
+    <div class="hint" style="margin-top:4px">Stored in browser localStorage — sent only to <code>api.ongoingsystems.se</code>.</div>
+    <div id="modal-prog" style="margin-top:12px"></div>`;
+
+  document.getElementById('btn-mo').disabled=false;
+  document.getElementById('btn-mo').textContent='Submit to Ongoing WMS';
+  document.getElementById('modal-actions').innerHTML='<button class="btn-mc" onclick="closeModal()">Cancel</button><button class="btn-mo" id="btn-mo" onclick="confirmSubmit()">Submit to Ongoing WMS</button>';
+  document.getElementById('submit-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('submit-modal').classList.remove('open'); }
+
+async function confirmSubmit() {
+  const user=document.getElementById('ong-user').value.trim();
+  const pass=document.getElementById('ong-pass').value;
+  const prog=document.getElementById('modal-prog');
+  if(!user||!pass){prog.innerHTML='<span style="color:var(--danger)">Enter API credentials before submitting.</span>';return;}
+  localStorage.setItem(CRED_USER_KEY,user);
+  localStorage.setItem(CRED_PASS_KEY,pass);
+  document.getElementById('btn-mo').disabled=true;
+  document.getElementById('modal-actions').querySelector('.btn-mc').disabled=true;
+
+  if(currentType==='inbound') await submitPO(user,pass,prog);
+  else await submitOrder(user,pass,prog);
+
+  document.getElementById('modal-actions').innerHTML='<button class="btn-mc" onclick="closeModal()">Close</button>';
+}
+
+// Submit Inbound PO (REST PUT /api/v1/purchaseOrders)
+async function submitPO(user, pass, prog) {
+  const goId=parseInt(document.getElementById('cfg-go').value);
+  const docNo=document.getElementById('cfg-docno').value.trim();
+  const inDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
+  const supplier=document.getElementById('cfg-supplier').value.trim();
+  const container=document.getElementById('cfg-container').value.trim();
+  const remark=document.getElementById('cfg-remark').value.trim();
+  const authHdr='Basic '+btoa(unescape(encodeURIComponent(user+':'+pass)));
+
+  const poMap={};
+  previewRows.forEach(r=>{const k=r.po||docNo||'(no PO)';(poMap[k]=poMap[k]||[]).push(r);});
+  const results=[];
+
+  for(const [poNum,rows] of Object.entries(poMap)) {
+    prog.innerHTML=`<span class="spin"></span> Submitting PO <b>${esc(poNum)}</b> (${rows.length} lines)…`;
+    const body={
+      goodsOwnerId: goId,
+      purchaseOrderNumber: poNum,
+      inDate: inDate?inDate+'T00:00:00':undefined,
+      supplierName: supplier||undefined,
+      containerNumber: container||undefined,
+      remark: remark||undefined,
+      purchaseOrderLines: rows.map((r,i)=>({
+        rowNumber: i+1,
+        article: { articleNumber:r.tag, articleName:r.desc },
+        numberOfItems: r.qty!==''?Number(r.qty):1,
+        comment: r.pallet||undefined,
+        itemWeight: r.wt!==''&&r.wt!=null?Number(r.wt):undefined,
+        itemLength: r.len!==''&&r.len!=null?Number(r.len):undefined,
+        itemWidth:  r.wid!==''&&r.wid!=null?Number(r.wid):undefined,
+        itemHeight: r.hgt!==''&&r.hgt!=null?Number(r.hgt):undefined,
+      }))
+    };
+    body.purchaseOrderLines=body.purchaseOrderLines.map(l=>{
+      Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);
+      return l;
+    });
+    Object.keys(body).forEach(k=>body[k]===undefined&&delete body[k]);
+
+    try{
+      const resp=await fetch(API_BASE+'/api/v1/purchaseOrders',{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','Authorization':authHdr},
+        body:JSON.stringify(body)
+      });
+      if(resp.ok){
+        const json=await resp.json().catch(()=>({}));
+        results.push({poNum,ok:true,detail:json.purchaseOrderId?'Ongoing ID: '+json.purchaseOrderId:'Accepted'});
+      }else{
+        const txt=await resp.text().catch(()=>'');
+        results.push({poNum,ok:false,detail:`HTTP ${resp.status} — ${txt.substring(0,140)}`});
+      }
+    }catch(err){
+      const cors=err instanceof TypeError;
+      results.push({poNum,ok:false,cors,detail:cors?'Network/CORS error — download Excel and import manually.':err.message});
+    }
+  }
+
+  const rows=results.map(r=>`<tr class="${r.ok?'r-ok':'r-err'}"><td>${r.ok?'&#10003;':'&#10007;'}</td><td><b>${esc(r.poNum)}</b></td><td style="font-size:.76rem">${esc(r.detail)}</td></tr>`).join('');
+  prog.innerHTML=`<table class="sum-tbl"><thead><tr><th></th><th>PO Number</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  const allOk=results.every(r=>r.ok),hasCors=results.some(r=>r.cors);
+  if(allOk) setStatus('gen-status',`<div class="ok-box">&#10003; ${results.length} purchase order(s) created in Ongoing WMS (goods owner ID ${document.getElementById('cfg-go').value}).<br><span style="color:var(--muted)">Pallet labels require Excel import — use "Download Ongoing WMS Import File" above.</span></div>`);
+  else if(hasCors) setStatus('gen-status',`<div class="err-box">&#10007; CORS error — Ongoing API may not allow direct browser requests. Download Excel and import manually.</div>`);
+  else setStatus('gen-status',`<div class="err-box">&#10007; Some submissions failed — see modal for details.</div>`);
+  if(!allOk) document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
+}
+
+// Submit Outbound Order (REST PUT /api/v1/orders)
+async function submitOrder(user, pass, prog) {
+  const goId=parseInt(document.getElementById('cfg-go').value);
+  const orderNo=document.getElementById('cfg-docno').value.trim();
+  const isoDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
+  const custCode=document.getElementById('cfg-custcode').value.trim();
+  const custName=document.getElementById('cfg-custname').value.trim();
+  const city=document.getElementById('cfg-city').value.trim();
+  const wod=document.getElementById('cfg-wayofdelivery').value;
+  const comment=document.getElementById('cfg-comment').value.trim();
+  const address=document.getElementById('cfg-address').value.trim();
+  const authHdr='Basic '+btoa(unescape(encodeURIComponent(user+':'+pass)));
+
+  if(!custCode){prog.innerHTML='<span style="color:var(--danger)">Customer Code is required for outbound orders.</span>';document.getElementById('btn-mo').disabled=false;return;}
+
+  prog.innerHTML=`<span class="spin"></span> Submitting order <b>${esc(orderNo)}</b> (${previewRows.length} lines)…`;
+
+  const body={
+    goodsOwnerId: goId,
+    orderNumber: orderNo,
+    deliveryDate: isoDate?isoDate+'T00:00:00':undefined,
+    orderComment: comment||undefined,
+    wayOfDelivery: wod?{wayOfDeliveryCode:wod}:undefined,
+    consignee: {
+      customerCode: custCode,
+      name: custName||undefined,
+      address: address||undefined,
+      city: city||undefined,
+    },
+    orderLines: previewRows.map((r,i)=>({
+      rowNumber: i+1,
+      article: {articleNumber:r.tag, articleName:r.desc},
+      numberOfItems: r.qty!==''?Number(r.qty):1,
+      rowComment: r.rowComment||undefined,
+    }))
+  };
+  body.orderLines=body.orderLines.map(l=>{Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);return l;});
+  Object.keys(body).forEach(k=>body[k]===undefined&&delete body[k]);
+  if(body.consignee)Object.keys(body.consignee).forEach(k=>body.consignee[k]===undefined&&delete body.consignee[k]);
+
+  try{
+    const resp=await fetch(API_BASE+'/api/v1/orders',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','Authorization':authHdr},
+      body:JSON.stringify(body)
+    });
+    if(resp.ok){
+      const json=await resp.json().catch(()=>({}));
+      const detail=json.orderId?'Ongoing order ID: '+json.orderId:'Accepted';
+      prog.innerHTML=`<div class="ok-box" style="margin:0">&#10003; Order <b>${esc(orderNo)}</b> created — ${detail}</div>`;
+      setStatus('gen-status',`<div class="ok-box">&#10003; Outbound order <b>${esc(orderNo)}</b> created in Ongoing WMS (goods owner ID ${goId}).</div>`);
+    }else{
+      const txt=await resp.text().catch(()=>'');
+      prog.innerHTML=`<div class="err-box" style="margin:0">&#10007; HTTP ${resp.status} — ${esc(txt.substring(0,200))}</div>`;
+      setStatus('gen-status',`<div class="err-box">&#10007; Submission failed — see modal. Download Excel and import manually.</div>`);
+      document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" style="margin-left:8px" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
+    }
+  }catch(err){
+    const cors=err instanceof TypeError;
+    prog.innerHTML=`<div class="err-box" style="margin:0">${cors?'&#10007; Network/CORS error — Ongoing API may not allow direct browser requests. Download Excel instead.':esc(err.message)}</div>`;
+    setStatus('gen-status',`<div class="err-box">&#10007; API request failed — download Excel and import manually.</div>`);
+    document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" style="margin-left:8px" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
+  }
+}
+
+// Start over
+function startOver() {
+  docs.length=0;previewRows=[];
+  document.getElementById('file-list').innerHTML='';
+  document.getElementById('src-dz').classList.remove('filled');
+  document.getElementById('extract-btn').style.display='none';
+  document.getElementById('cfg-card').style.display='none';
+  document.getElementById('review-card').style.display='none';
+  document.getElementById('gen-card').style.display='none';
+  document.getElementById('extract-errors').innerHTML='';
+  document.getElementById('preview-body').innerHTML='';
+  document.getElementById('out-name').value='';
+  document.getElementById('cfg-docno').value='';
+  document.getElementById('cfg-date').value='';
+  setStatus('gen-status','');
+}
+</script>
+</body>
+</html>
