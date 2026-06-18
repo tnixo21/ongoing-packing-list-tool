@@ -72,7 +72,7 @@ textarea{resize:vertical;min-height:48px;line-height:1.5}
 .btn-api{background:var(--surface2);border:1px solid rgba(99,102,241,.35);width:100%;border-radius:var(--radius);padding:12px;color:#a5b4fc;font-size:.92rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;margin-bottom:10px}
 .btn-api:hover{background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.6)}
 .btn-api:disabled{opacity:.3;cursor:not-allowed}
-.btn-add{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px 14px;cursor:pointer;font-size:.82rem;width:100%;transition:all .15px;font-family:inherit;margin-top:8px}
+.btn-add{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px 14px;cursor:pointer;font-size:.82rem;width:100%;transition:all .15s;font-family:inherit;margin-top:8px}
 .btn-add:hover{border-color:var(--accent);color:var(--accent)}
 .btn-del{background:none;border:none;color:var(--muted);border-radius:5px;cursor:pointer;font-size:1.1rem;line-height:1;transition:color .15s;padding:2px 5px}
 .btn-del:hover{color:var(--danger)}
@@ -130,7 +130,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
 
 <div class="header">
   <h1>Universal Packing List Tool</h1>
-  <p>Any packing list (Excel or PDF) &rarr; Ongoing WMS Purchase Order (inbound) or Order (outbound) &mdash; with direct API upload.</p>
+  <p>Any packing list (Excel or PDF) → Ongoing WMS Purchase Order (inbound) or Order (outbound) — with direct API upload.</p>
 </div>
 
 <!-- Step 1: Configure -->
@@ -143,7 +143,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
       <label>Goods Owner</label>
       <select id="cfg-go"></select>
     </div>
-    <button class="btn-sm" onclick="refreshGoodsOwners()" id="btn-go-refresh" title="Load live list from Ongoing API">&#8635; Refresh</button>
+    <button class="btn-sm" onclick="refreshGoodsOwners()" id="btn-go-refresh" title="Load live list from Ongoing API">↻ Refresh</button>
     <div id="go-status" style="font-size:.76rem;color:var(--muted);align-self:center;min-width:120px"></div>
   </div>
 
@@ -151,10 +151,10 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
   <div style="font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Type</div>
   <div class="type-toggle">
     <div class="type-btn active-inbound" id="btn-inbound" onclick="setType('inbound')">
-      &#128229; Purchase Order <span style="font-weight:400;font-size:.8em">(Inbound)</span>
+      📥 Purchase Order <span style="font-weight:400;font-size:.8em">(Inbound)</span>
     </div>
     <div class="type-btn" id="btn-outbound" onclick="setType('outbound')">
-      &#128228; Order <span style="font-weight:400;font-size:.8em">(Outbound)</span>
+      📤 Order <span style="font-weight:400;font-size:.8em">(Outbound)</span>
     </div>
   </div>
 
@@ -163,7 +163,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
     <div class="field-group">
       <label id="lbl-docno">Purchase Order Number</label>
       <input type="text" id="cfg-docno" placeholder="e.g. PK-35">
-      <div class="hint" id="hint-docno">Auto-detected from paperwork &mdash; override if needed.</div>
+      <div class="hint" id="hint-docno">Auto-detected from paperwork — override if needed.</div>
     </div>
     <div class="field-group">
       <label id="lbl-date">ETA / In-Date</label>
@@ -184,7 +184,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
       </div>
       <div class="field-group">
         <label>Storage Requirements</label>
-        <input type="text" id="cfg-storage" placeholder="e.g. Keep dry &middot; Fragile">
+        <input type="text" id="cfg-storage" placeholder="e.g. Keep dry · Fragile">
       </div>
       <div class="field-group">
         <label>General Remark</label>
@@ -213,14 +213,14 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
         <select id="cfg-wayofdelivery">
           <option value="delivery">Delivery</option>
           <option value="pickup">Pickup</option>
-          <option value="">&mdash; not set &mdash;</option>
+          <option value="">— not set —</option>
         </select>
       </div>
     </div>
     <div class="cfg-grid two" style="margin-top:10px">
       <div class="field-group">
         <label>Order Comment</label>
-        <input type="text" id="cfg-comment" placeholder="e.g. Fragile &mdash; forklift required">
+        <input type="text" id="cfg-comment" placeholder="e.g. Fragile — forklift required">
       </div>
       <div class="field-group">
         <label>Delivery Address</label>
@@ -237,7 +237,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
   <div class="dz" id="src-dz" onclick="document.getElementById('src-input').click()">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
     <p class="primary">Drop Excel or PDF files here, or click to browse</p>
-    <p class="secondary">Multiple files &middot; .xlsx .xls .xlsm .pdf &mdash; any supplier packing list format</p>
+    <p class="secondary">Multiple files · .xlsx .xls .xlsm .pdf — any supplier packing list format</p>
   </div>
   <input type="file" id="src-input" accept=".xlsx,.xls,.xlsm,.pdf" multiple style="display:none">
   <div class="file-list" id="file-list"></div>
@@ -245,7 +245,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
 
 <!-- Extract button -->
 <button class="btn-primary" id="extract-btn" onclick="runExtract()" style="display:none">
-  Extract &amp; Preview &rarr;
+  Extract &amp; Preview →
 </button>
 
 <!-- Step 3: Review -->
@@ -255,7 +255,7 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
   <div class="row-count" id="row-count"></div>
   <div style="font-size:.73rem;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-    Click any cell to edit &mdash; correct tags, quantities, pallets, or PO numbers before generating.
+    Click any cell to edit — correct tags, quantities, pallets, or PO numbers before generating.
   </div>
   <div class="tbl-scroll">
     <table id="preview-tbl">
@@ -273,14 +273,14 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
     <label>Output file name</label>
     <input type="text" id="out-name" placeholder="PackingList_YYYYMMDD.xlsx">
   </div>
-  <button class="btn-dl" id="btn-dl" onclick="generateExcel()">&ddarr; Download Ongoing WMS Import File</button>
+  <button class="btn-dl" id="btn-dl" onclick="generateExcel()">⬇ Download Ongoing WMS Import File</button>
   <div class="hint" style="text-align:center;margin-bottom:14px" id="dl-hint">
-    Downloads the Ongoing WMS import xlsx &mdash; import via <b>Registers &rarr; Import &rarr; Purchase order</b> (or Order &rarr; Import for outbound).
+    Downloads the Ongoing WMS import xlsx — import via <b>Registers → Import → Purchase order</b> (or Order → Import for outbound).
   </div>
   <div class="divider"></div>
-  <button class="btn-api" id="btn-api" onclick="openSubmitModal()">&#128279; Submit Directly to Ongoing WMS</button>
+  <button class="btn-api" id="btn-api" onclick="openSubmitModal()">🔗 Submit Directly to Ongoing WMS</button>
   <div class="hint" style="text-align:center;margin-bottom:10px" id="api-hint">
-    Creates records directly via the Ongoing REST API &mdash; requires API credentials.
+    Creates records directly via the Ongoing REST API — requires API credentials.
   </div>
   <div id="gen-status"></div>
 </div>
@@ -309,11 +309,13 @@ code{background:var(--surface2);border:1px solid var(--border);border-radius:4px
 <script>
 'use strict';
 
+// ── PDF.js worker ───────────────────────────────────────────────────────────
 if (typeof pdfjsLib !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
+// ── Constants ───────────────────────────────────────────────────────────────
 const API_BASE      = 'https://api.ongoingsystems.se/BWSBNE';
 const GO_KEY        = 'univ_goods_owners_v1';
 const CRED_USER_KEY = 'ongoing_user';
@@ -338,11 +340,13 @@ const DEFAULT_GOODS_OWNERS = [
   {id:113, name:'Lihir Island - Empty Container Depot'},
 ];
 
+// ── State ───────────────────────────────────────────────────────────────────
 let uid = 1;
 const docs        = [];
 let previewRows   = [];
-let currentType   = 'inbound';
+let currentType   = 'inbound';  // 'inbound' | 'outbound'
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function setStatus(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
 
@@ -360,6 +364,7 @@ function parseDisplayDate(s) {
   return '';
 }
 
+// ── Goods Owner list ─────────────────────────────────────────────────────────
 function getGoodsOwners() {
   try {
     const stored = localStorage.getItem(GO_KEY);
@@ -385,7 +390,7 @@ async function refreshGoodsOwners() {
   const user = localStorage.getItem(CRED_USER_KEY) || '';
   const pass = localStorage.getItem(CRED_PASS_KEY) || '';
   if (!user || !pass) {
-    stat.innerHTML = '<span style="color:var(--warning)">Enter API credentials first (Step 4 &rarr; Submit).</span>';
+    stat.innerHTML = '<span style="color:var(--warning)">Enter API credentials first (Step 4 → Submit).</span>';
     return;
   }
   btn.innerHTML = '<span class="spin"></span>';
@@ -403,14 +408,15 @@ async function refreshGoodsOwners() {
     if (!list.length) throw new Error('No goods owners returned');
     saveGoodsOwners(list);
     populateGoDropdown(list);
-    stat.innerHTML = `<span style="color:var(--success)">&#10003; ${list.length} owners loaded</span>`;
+    stat.innerHTML = `<span style="color:var(--success)">✓ ${list.length} owners loaded</span>`;
   } catch(e) {
-    stat.innerHTML = `<span style="color:var(--danger)">&#10007; ${esc(e.message.substring(0,60))}</span>`;
+    stat.innerHTML = `<span style="color:var(--danger)">✗ ${esc(e.message.substring(0,60))}</span>`;
   } finally {
-    btn.innerHTML = '&#8635; Refresh';
+    btn.innerHTML = '↻ Refresh';
   }
 }
 
+// ── Type toggle ──────────────────────────────────────────────────────────────
 function setType(t) {
   currentType = t;
   document.getElementById('btn-inbound').className  = 'type-btn' + (t==='inbound'  ? ' active-inbound'  : '');
@@ -419,16 +425,19 @@ function setType(t) {
   document.getElementById('cfg-outbound-extra').style.display = t==='outbound' ? '' : 'none';
   document.getElementById('lbl-docno').textContent = t==='inbound' ? 'Purchase Order Number' : 'Order Number';
   document.getElementById('lbl-date').textContent  = t==='inbound' ? 'ETA / In-Date' : 'Delivery Date';
-  document.getElementById('hint-docno').textContent = 'Auto-detected from paperwork — override if needed.';
+  document.getElementById('hint-docno').textContent = t==='inbound'
+    ? 'Auto-detected from paperwork — override if needed.'
+    : 'Auto-detected from paperwork — override if needed.';
   document.getElementById('dl-hint').innerHTML = t==='inbound'
-    ? 'Downloads xlsx for <b>Registers &rarr; Import &rarr; Purchase order</b> in Ongoing WMS.'
-    : 'Downloads xlsx for <b>Order &rarr; Import</b> in Ongoing WMS.';
+    ? 'Downloads xlsx for <b>Registers → Import → Purchase order</b> in Ongoing WMS.'
+    : 'Downloads xlsx for <b>Order → Import</b> in Ongoing WMS.';
   document.getElementById('api-hint').innerHTML = t==='inbound'
     ? 'Creates a purchase order via <code>PUT /api/v1/purchaseOrders</code>. Note: pallet labels require Excel import.'
     : 'Creates outbound orders via <code>PUT /api/v1/orders</code>.';
   if (previewRows.length) renderTable();
 }
 
+// ── Drop zone setup ──────────────────────────────────────────────────────────
 (function init() {
   populateGoDropdown(getGoodsOwners());
   const dz  = document.getElementById('src-dz');
@@ -440,10 +449,11 @@ function setType(t) {
   document.getElementById('submit-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 })();
 
+// ── File management ──────────────────────────────────────────────────────────
 function addFile(file) {
   const id = uid++;
   const isPdf = /\.pdf$/i.test(file.name);
-  docs.push({ id, file, name: file.name, isPdf, ref: '', prefix: '', supplier: '', notes: '' });
+  docs.push({ id, file, name: file.name, isPdf, prefix: '', supplier: '', notes: '' });
   const div = document.createElement('div');
   div.className = 'file-item';
   div.id = 'fi-' + id;
@@ -455,12 +465,8 @@ function addFile(file) {
     </div>
     <div class="file-fields">
       <div class="field-group">
-        <label>PO / Order Ref <span style="color:var(--muted);font-weight:400;font-size:.78rem">(e.g. PK-35)</span></label>
-        <input type="text" placeholder="e.g. PK-35" oninput="setDoc(${id},'ref',this.value);setDoc(${id},'prefix',this.value);this.closest('.file-item').querySelector('[data-pfx]').value=this.value">
-      </div>
-      <div class="field-group">
-        <label>Pallet Prefix <span style="color:var(--muted);font-weight:400;font-size:.78rem">(auto-filled)</span></label>
-        <input type="text" data-pfx placeholder="e.g. PK-35" oninput="setDoc(${id},'prefix',this.value)">
+        <label>Pallet Prefix <span style="color:var(--muted);font-weight:400;font-size:.78rem">(used in pallet label, e.g. PK-35)</span></label>
+        <input type="text" placeholder="e.g. PK-35" oninput="setDoc(${id},'prefix',this.value)">
       </div>
       <div class="field-group">
         <label>Supplier <span style="color:var(--muted);font-weight:400;font-size:.78rem">(optional)</span></label>
@@ -468,7 +474,7 @@ function addFile(file) {
       </div>
       <div class="field-group" style="grid-column:1/-1">
         <label>Notes</label>
-        <textarea placeholder="e.g. Bay 10 Row 3 &middot; no dimensions &middot; tag suffix: - SP" oninput="setDoc(${id},'notes',this.value)"></textarea>
+        <textarea placeholder="e.g. Bay 10 Row 3 · no dimensions · tag suffix: - SP" oninput="setDoc(${id},'notes',this.value)"></textarea>
       </div>
     </div>`;
   document.getElementById('file-list').appendChild(div);
@@ -489,6 +495,7 @@ function removeFile(id) {
 
 function setDoc(id, k, v) { const d = docs.find(x => x.id === id); if (d) d[k] = v.trim(); }
 
+// ── Number & unit parsers ────────────────────────────────────────────────────
 const NOT_A_CRATE_RE = /^(floor[\s-]?load\w*|loose|not\s+in\s+(a\s+)?(crate|box)|n\/?a|nil|none|tbd|-+)$/i;
 const _pn = s => { s=String(s).trim(); if(s.includes(',')&&s.includes('.'))s=s.replace(/,/g,''); else if(/,\d{3}(?:,\d{3})*(?:[^0-9]|$)/.test(s))s=s.replace(/,/g,''); else s=s.replace(/,/g,'.'); return parseFloat(s.replace(/[^0-9.]/g,'')); };
 const toM = (v,u) => { const n=_pn(v); if(isNaN(n)||!n)return ''; return u==='mm'?+((n/1000).toFixed(4)):u==='cm'?+((n/100).toFixed(4)):n>20?+((n/1000).toFixed(4)):+(n.toFixed(4)); };
@@ -504,6 +511,7 @@ const extractTagFromDesc = s => {
   return '';
 };
 
+// ── Header detection ─────────────────────────────────────────────────────────
 const KW = {
   tag:   ['tag no','tag number','tag#','tag','serial no','serial number','rel. part no','rel part no','part no','part number','article no','article number','material no','material number','item no','item number','item code','item','package no','packageno','mark no','markno','drawing no','rpn','your reference','ref no','reference no'],
   desc:  ['brief description','item description','product description','product type','description','desc'],
@@ -641,6 +649,7 @@ function _parseXLSheet(ws) {
   return{rows:out,warn:out.length===0?'No data rows found — check the file has a recognisable header row.':null};
 }
 
+// ── Valmont "Final Packing List" parser ──────────────────────────────────────
 function _parseValmontPackingList(wb, prefix) {
   const wsName=wb.SheetNames.find(n=>/^packing\s+list$/i.test(n.trim()));
   if(!wsName)return{rows:[]};
@@ -690,6 +699,7 @@ function _parseValmontPackingList(wb, prefix) {
   return{rows:out,warn:out.length===0?'Valmont PL: no items found.':'Valmont Final Packing List: weights only, no dimensions.'};
 }
 
+// ── Pall "Packing Note" parser ───────────────────────────────────────────────
 function _parsePallPackingNote(ws, prefix) {
   const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
   let hi=-1;
@@ -723,6 +733,7 @@ function _parsePallPackingNote(ws, prefix) {
   return{rows:out,warn:out.length===0?'Packing Note found but no items extracted.':null};
 }
 
+// ── CASE-tab parser (Suntech / Wuxi bilingual) ───────────────────────────────
 function _parseCaseSheets(wb, caseNames, prefix) {
   const ep=(prefix||'PK').trim();
   const usePrefixSpace=/case\s*$/i.test(ep);
@@ -768,6 +779,7 @@ function _parseCaseSheets(wb, caseNames, prefix) {
   return{rows:out,warn:out.length===0?'CASE sheets found but no items extracted.':'CASE-tab format: all tagged items extracted. Pallet-level weight/dims shown — edit individual rows as needed.'};
 }
 
+// ── tryParseGroupedCrate (CIPL/Bray PDF style) ───────────────────────────────
 function tryParseGroupedCrate(allItems) {
   const crateItems=allItems.filter(i=>/^Crate\s+\d+$/i.test(i.text)&&i.x<120).sort((a,b)=>a.y-b.y);
   if(!crateItems.length)return null;
@@ -791,7 +803,7 @@ function tryParseGroupedCrate(allItems) {
     const tagZone=ctMap.get(crate);
     const rawTagText=tagZone.sort((a,b)=>a.y!==b.y?a.y-b.y:a.x-b.x).map(i=>i.text).join(' ').replace(/-\s+/g,'-').replace(/\s+-/g,'-');
     const tags=[];
-    for(const tok of rawTagText.split(',')){ for(const word of tok.trim().split(/\s+/)){ const t=extractTagFromDesc(word); if(t&&!tags.includes(t))tags.push(t); } }
+    for(const tok of rawTagText.split(',')){for(const word of tok.trim().split(/\s+/)){const t=extractTagFromDesc(word);if(t&&!tags.includes(t))tags.push(t);}}
     if(!tags.length)continue;
     const nearY=allItems.filter(i=>Math.abs(i.y-crate.y)<20&&i.y<pageEnd);
     const descItems=nearY.filter(i=>i.x>=descX-20&&!NOISE.test(i.text)&&!/^\d{4}\.\d{2}/.test(i.text)&&i.text.length>4);
@@ -806,6 +818,7 @@ function tryParseGroupedCrate(allItems) {
   return rows.length?rows:null;
 }
 
+// ── tryParseDeliveryDocket (KIOSK) ───────────────────────────────────────────
 function tryParseDeliveryDocket(allItems) {
   if(!allItems.some(i=>/kiosk/i.test(i.text)))return null;
   const ki=allItems.findIndex(i=>/^KIOSK\s*#?$/i.test(i.text));if(ki<0)return null;
@@ -824,6 +837,7 @@ function tryParseDeliveryDocket(allItems) {
   return[{tag,desc,qty:1,wt,len,wid,hgt,crate:'',bay:'',row:'',detectedPO:''}];
 }
 
+// ── tryParseAlfaLavalPL ──────────────────────────────────────────────────────
 function tryParseAlfaLavalPL(allItems) {
   if(!allItems.some(i=>/Gross\s*W\s*\(kgs\)/i.test(i.text)))return null;
   if(!allItems.some(i=>/Cust\.?\s*Item:/i.test(i.text)))return null;
@@ -845,6 +859,7 @@ function tryParseAlfaLavalPL(allItems) {
   return rows.length?rows:null;
 }
 
+// ── OCR fallback ─────────────────────────────────────────────────────────────
 async function tryParseWithOCR(pdf) {
   if(!window.Tesseract){
     await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://unpkg.com/tesseract.js@5/dist/tesseract.min.js';s.onload=res;s.onerror=()=>rej(new Error('Tesseract.js failed to load'));document.head.appendChild(s);});
@@ -863,6 +878,7 @@ async function tryParseWithOCR(pdf) {
   return{rows:tags.map(tag=>({tag,desc:'',qty:1,wt:'',len:'',wid:'',hgt:'',crate:'',bay:'',row:'',detectedPO:''})),warn:'OCR: tag codes only — descriptions and dimensions need manual entry.'};
 }
 
+// ── Main Excel dispatcher ────────────────────────────────────────────────────
 function parseXL(buf, prefix) {
   const wb=XLSX.read(buf,{type:'array'});
   const caseNames=wb.SheetNames.filter(n=>/^CASE\s*\d+$/i.test(n.trim()));
@@ -872,6 +888,139 @@ function parseXL(buf, prefix) {
   if(result.rows.length>0)return result;
   if(wb.Sheets['Packing Note']){const pr=_parsePallPackingNote(wb.Sheets['Packing Note'],prefix);if(pr.rows.length>0)return pr;}
   return result;
+}
+
+// ── Hudson / Provisur Technologies packing list parser ───────────────────────
+// Detected by: "PACKING LIST" header + "Container No: XXXXX" sections + "Centimeters" sub-header
+// Structure: each container section has its own table; items have qty + pallet/crate label + 11
+// numeric columns (L_in W_in H_in L_cm W_cm H_cm Cubic Gross_lbs Net_lbs Gross_kg Net_kg).
+// Generates one detectedPO per container ("0000191 #1", "#2", …) and sets container field.
+
+function splitHudsonDesc(text) {
+  if (!text) return { tag: '', desc: '' };
+  let serial = '';
+  const work = text.replace(/\bSERIAL\s+NO\.?\s*([A-Z0-9]+)\b/gi, (_, sn) => {
+    if (!serial) serial = sn; return ' ';
+  }).replace(/\s+/g, ' ').trim();
+  // Code token: contains both letters AND digits, only alphanumeric+dash chars
+  const isCode = t => /[A-Z]/i.test(t) && /\d/.test(t) && /^[A-Z0-9-]+$/i.test(t);
+  const primaryCode = work.split(/\s+/).find(t => isCode(t)) || '';
+  let tag = '';
+  if (primaryCode && serial) tag = primaryCode + '-SN' + serial;
+  else if (primaryCode) tag = primaryCode;
+  else if (serial) tag = 'SN-' + serial;
+  else tag = work;
+  return { tag, desc: work || text };
+}
+
+function tryParseHudson(allItems, rawRows) {
+  if (!allItems.some(i => /^PACKING\s+LIST$/i.test(i.text))) return null;
+  if (!allItems.some(i => /^Container\s+(?:No:?\s*)?[A-Z]{4}\d/i.test(i.text))) return null;
+  if (!allItems.some(i => /^Centimeters$/i.test(i.text))) return null;
+
+  // Purchase order from header ("Purchase Order: 0000191")
+  let basePO = '';
+  for (const item of allItems) {
+    const m = item.text.match(/Purchase\s+Order:\s*(.+)/i);
+    if (m) { basePO = m[1].trim(); break; }
+  }
+
+  // Find container section boundaries
+  const CONTAINER_RE = /^Container\s+(?:No:?\s*)?([A-Z]{4}[\d-]+)/i;
+  const sections = [];
+  rawRows.forEach((row, ri) => {
+    for (const cell of row) {
+      const m = cell.text.match(CONTAINER_RE);
+      if (m) { sections.push({ rowIdx: ri, containerNum: m[1] }); break; }
+    }
+  });
+  if (!sections.length) return null;
+
+  const out = [];
+
+  sections.forEach(({ rowIdx, containerNum }, ci) => {
+    const endIdx = ci + 1 < sections.length ? sections[ci + 1].rowIdx : rawRows.length;
+    const sectionRows = rawRows.slice(rowIdx + 1, endIdx);
+    const poNum = basePO ? `${basePO} #${ci + 1}` : `#${ci + 1}`;
+
+    // Find sub-header row that has "Centimeters"
+    let subHdrIdx = -1;
+    for (let i = 0; i < Math.min(sectionRows.length, 6); i++) {
+      if (sectionRows[i].some(c => /^Centimeters$/i.test(c.text))) { subHdrIdx = i; break; }
+    }
+    if (subHdrIdx < 0) return;
+
+    const dataRows = sectionRows.slice(subHdrIdx + 1);
+    let i = 0, palletSeq = 0;
+
+    while (i < dataRows.length) {
+      const row = dataRows[i];
+      if (!row.length) { i++; continue; }
+
+      // Item row: first cell is qty (small positive integer), second cell is text label
+      const qty = parseInt(row[0].text);
+      if (isNaN(qty) || qty <= 0 || qty > 99 || row.length < 3) { i++; continue; }
+      const labelCell = row[1];
+      if (!labelCell || /^\d+$/.test(labelCell.text.trim())) { i++; continue; }
+      const label = labelCell.text.trim();
+      if (/^TOTAL$/i.test(label)) { i++; continue; }
+
+      palletSeq++;
+      const crateM = label.match(/(\d+)\s*$/);
+      const crateNum = crateM ? crateM[1] : String(palletSeq);
+      const crateLabel = crateM ? `Crate ${crateM[1]}` : `Pallet ${palletSeq}`;
+
+      // All numeric cells after the label, sorted left-to-right
+      // Structure (11 values): L_in W_in H_in L_cm W_cm H_cm Cubic Gross_lbs Net_lbs Gross_kg Net_kg
+      const numCells = row.slice(2).filter(c => /^\d+$/.test(c.text.trim())).sort((a,b) => a.x - b.x);
+      let len='', wid='', hgt='', grossKg='';
+      if (numCells.length >= 10) {
+        len = toM(numCells[3].text, 'cm');
+        wid = toM(numCells[4].text, 'cm');
+        hgt = toM(numCells[5].text, 'cm');
+        grossKg = parseFloat(numCells[9].text);
+      } else if (numCells.length >= 4) {
+        len = toM(numCells[0].text, 'cm');
+        wid = toM(numCells[1].text, 'cm');
+        hgt = toM(numCells[2].text, 'cm');
+        if (numCells[3]) grossKg = parseFloat(numCells[3].text);
+      }
+
+      // Collect description text rows until next item/total/page marker
+      i++;
+      const descLines = [];
+      while (i < dataRows.length) {
+        const nr = dataRows[i];
+        if (!nr.length) { i++; continue; }
+        const first = nr[0].text.trim();
+        const nextQty = parseInt(first);
+        if (!isNaN(nextQty) && nextQty > 0 && nextQty <= 99 && nr.length > 2) break;
+        if (/^(TOTAL|Page\s+\d|SIGNED|PROVISUR)/i.test(first)) break;
+        const line = nr.filter(c => c.x < 220).map(c => c.text).join(' ').trim();
+        if (line) descLines.push(line);
+        i++;
+      }
+
+      const fullDesc = descLines.join(' ').replace(/\s+/g, ' ').trim();
+      const { tag, desc } = splitHudsonDesc(fullDesc);
+
+      out.push({
+        tag:  tag  || crateLabel,
+        desc: desc || fullDesc || crateLabel,
+        qty,
+        wt: grossKg || '',
+        len, wid, hgt,
+        crate: crateNum,
+        bay: '', row: '',
+        detectedPO: poNum,
+        container: containerNum,
+        prebuiltPallet: `${containerNum} ${crateLabel}`,
+      });
+    }
+  });
+
+  if (!out.length) return null;
+  return { rows: out, warn: null };
 }
 
 // ── SchuF Speciality Valves packing list parser ───────────────────────────────
@@ -969,6 +1118,10 @@ async function parsePDF(buf) {
     else{rawRows.push(cur.sort((a,b)=>a.x-b.x));cur=[allItems[i]];curY=allItems[i].y;}
   }
   if(cur.length)rawRows.push(cur.sort((a,b)=>a.x-b.x));
+
+  const hudsonR=tryParseHudson(allItems,rawRows);
+  if(hudsonR) return hudsonR;
+
   const textRows=rawRows.map(r=>r.map(i=>i.text));
   const hi=findHdr(textRows);
   if(hi<0){
@@ -1046,6 +1199,7 @@ async function runExtract() {
       const{rows,warn}=doc.isPdf?await parsePDF(buf):parseXL(buf,effectivePrefix);
       if(warn)errors.push(`<b>${esc(doc.name)}</b> — ${esc(warn)}`);
       const ni=parseNotes(doc.notes);
+      const globalPO=document.getElementById('cfg-docno').value.trim();
       let autoSeq=0;
       all=all.concat(rows.map(r=>{
         let tag=r.tag;
@@ -1057,14 +1211,16 @@ async function runExtract() {
           id:uid++,tag,desc:r.desc,qty:r.qty,
           wt:r.wt,len:ni.noDims?'':r.len,wid:ni.noDims?'':r.wid,hgt:ni.noDims?'':r.hgt,
           pallet:(r.prebuiltPallet!==undefined)?r.prebuiltPallet:mkPallet(effectivePrefix,r.bay||ni.bay,r.row||ni.row,effectiveCrate),
-          po:doc.ref||r.detectedPO||'',
+          po:r.detectedPO||globalPO||'',
           supplier:doc.supplier||'',
+          container:r.container||'',
           rowComment:''
         };
       }));
-    }catch(e){errors.push(`<b>${esc(doc.name)}</b> — ${esc(e.message)}`)}
+    }catch(e){errors.push(`<b>${esc(doc.name)}</b> — ${esc(e.message)}`);}
   }
   previewRows=dedupTags(all);
+  // Auto-detect PO number: most common non-empty po value
   const poFreq={};previewRows.forEach(r=>{if(r.po)(poFreq[r.po]=(poFreq[r.po]||0)+1);});
   const topPO=Object.entries(poFreq).sort((a,b)=>b[1]-a[1])[0];
   const poField=document.getElementById('cfg-docno');
@@ -1078,15 +1234,16 @@ async function runExtract() {
   renderTable();
   document.getElementById('review-card').style.display='block';
   document.getElementById('gen-card').style.display='block';
-  btn.innerHTML='Extract &amp; Preview &rarr;';btn.disabled=false;
+  btn.innerHTML='Extract &amp; Preview →';btn.disabled=false;
   document.getElementById('review-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+// ── Review table ─────────────────────────────────────────────────────────────
 function renderTable() {
   const thead=document.getElementById('preview-head');
   const tbody=document.getElementById('preview-body');
   const isIn=currentType==='inbound';
-  const lastCol=isIn?'<th>Pallet Label</th><th>PO Number</th><th>Supplier</th>':'<th>Row Comment</th>';
+  const lastCol=isIn?'<th>Pallet Label</th><th>PO Number</th><th>Container</th><th>Supplier</th>':'<th>Row Comment</th>';
   thead.innerHTML=`<tr><th>Tag / Article #</th><th>Description</th><th>Qty</th><th>Weight (kg)</th><th>L (m)</th><th>W (m)</th><th>H (m)</th>${lastCol}<th></th></tr>`;
   tbody.innerHTML='';
   previewRows.forEach(r=>tbody.appendChild(mkTr(r)));
@@ -1097,7 +1254,7 @@ function mkTr(r) {
   const tr=document.createElement('tr');tr.id='tr-'+r.id;
   const isIn=currentType==='inbound';
   const base=['tag','desc','qty','wt','len','wid','hgt'];
-  const extra=isIn?['pallet','po','supplier']:['rowComment'];
+  const extra=isIn?['pallet','po','container','supplier']:['rowComment'];
   const fields=[...base,...extra];
   tr.innerHTML=fields.map(f=>`<td><input type="text" value="${esc(String(r[f]??''))}" oninput="upd(${r.id},'${f}',this.value)"></td>`).join('')
     +`<td><button class="btn-del" onclick="delR(${r.id})">&times;</button></td>`;
@@ -1107,40 +1264,51 @@ function mkTr(r) {
 function upd(id,k,v){const r=previewRows.find(x=>x.id===id);if(r)r[k]=v;}
 function delR(id){previewRows=previewRows.filter(r=>r.id!==id);const t=document.getElementById('tr-'+id);if(t)t.remove();document.getElementById('row-count').textContent=previewRows.length+' rows';}
 function addRow(){
-  const r={id:uid++,tag:'',desc:'',qty:1,wt:'',len:'',wid:'',hgt:'',pallet:'',po:document.getElementById('cfg-docno').value||'',supplier:'',rowComment:''};
+  const r={id:uid++,tag:'',desc:'',qty:1,wt:'',len:'',wid:'',hgt:'',pallet:'',po:document.getElementById('cfg-docno').value||'',container:'',supplier:'',rowComment:''};
   previewRows.push(r);
   document.getElementById('preview-body').appendChild(mkTr(r));
   document.getElementById('row-count').textContent=previewRows.length+' rows';
 }
 
+// ── Generate Purchase Order xlsx (Ongoing inbound import format) ─────────────
 function generatePOXlsx() {
   const ONG_HEADERS=['OrderNo','InDate','OrderDate','Reference','Container','CustomerNumber','RowNumber','RowId','ArticleNumber','ArticleName','BarCode','NumberOfItems','InvoiceNumber','RowPrice','RowBatchNo','RowSerialNumber','SupplierNumber','SupplierName','SupplierAddress','SupplierAddress2','SupplierAddress3','SupplierPostCode','SupplierCity','SupplierCountryCode','SupplierPhone','SupplierEmail','ArticleItemPalletItem.LabelId','Weight','Length','Width','Height','InOrderLine.ExternalOrderLineCode'];
   const I={OrderNo:0,InDate:1,Reference:3,Container:4,ArticleNumber:8,ArticleName:9,NumberOfItems:11,SupplierName:17,LabelId:26,Weight:27,Length:28,Width:29,Height:30,ExtLineCode:31};
+
   const globalPO=document.getElementById('cfg-docno').value.trim();
   const inDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
   const supplier=document.getElementById('cfg-supplier').value.trim();
   const container=document.getElementById('cfg-container').value.trim();
   const remark=document.getElementById('cfg-remark').value.trim();
+
   const dataRows=previewRows.map((r,idx)=>{
     const row=new Array(ONG_HEADERS.length).fill('');
-    row[I.OrderNo]=r.po||globalPO;row[I.InDate]=inDate;row[I.Reference]=remark;row[I.Container]=container;
-    row[I.ArticleNumber]=r.tag;row[I.ArticleName]=r.desc;
+    row[I.OrderNo]      =r.po||globalPO;
+    row[I.InDate]       =inDate;
+    row[I.Reference]    =remark;
+    row[I.Container]    =r.container||container;
+    row[I.ArticleNumber]=r.tag;
+    row[I.ArticleName]  =r.desc;
     row[I.NumberOfItems]=r.qty!==''&&r.qty!=null?Number(r.qty):'';
-    row[I.SupplierName]=r.supplier||supplier;row[I.LabelId]=r.pallet;
-    row[I.Weight]=r.wt!==''&&r.wt!=null?Number(r.wt):'';
-    row[I.Length]=r.len!==''&&r.len!=null?Number(r.len):'';
-    row[I.Width]=r.wid!==''&&r.wid!=null?Number(r.wid):'';
-    row[I.Height]=r.hgt!==''&&r.hgt!=null?Number(r.hgt):'';
-    row[I.ExtLineCode]=String(idx+1);
+    row[I.SupplierName] =r.supplier||supplier;
+    row[I.LabelId]      =r.pallet;
+    row[I.Weight]       =r.wt!==''&&r.wt!=null?Number(r.wt):'';
+    row[I.Length]       =r.len!==''&&r.len!=null?Number(r.len):'';
+    row[I.Width]        =r.wid!==''&&r.wid!=null?Number(r.wid):'';
+    row[I.Height]       =r.hgt!==''&&r.hgt!=null?Number(r.hgt):'';
+    row[I.ExtLineCode]  =String(idx+1);
     return row;
   });
+
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([ONG_HEADERS,...dataRows]),'Data');
   return wb;
 }
 
+// ── Generate Order xlsx (Ongoing outbound order import format) ───────────────
 function generateOrderXlsx() {
   const hdrs=['CustomerNumber','DeliveryDate','Reference','TranporterOrderNumber','OrderNo','ArticleNumber','ArticleName','OrderRowBatchNo','NumberOfItems','OrderComment','OrderRowComment','SalesCode','OrderDeliveryInstruction','CustomerOrderNumber','WayOfDelivery','Transporter.TransporterCode','Transporter.TransporterServiceCode','Transporter.TransporterCustomerNumber','Customer.Name','Customer.Address','Customer.Address2','Customer.Address3','Customer.PostCode','Customer.City','Customer.TelePhone','Customer.Remark','Customer.Email','Customer.MobilePhone','Customer.CountryCode','Customer.CountryName','Customer.CountryStateCode','Customer.DeliveryInstruction','Customer.NotifyBySMS','Customer.NotifyByEmail','Customer.NotifyByTelephone'];
+
   const orderNo=document.getElementById('cfg-docno').value.trim();
   const isoDate=parseDisplayDate(document.getElementById('cfg-date').value.trim());
   const custCode=document.getElementById('cfg-custcode').value.trim();
@@ -1149,20 +1317,23 @@ function generateOrderXlsx() {
   const wod=document.getElementById('cfg-wayofdelivery').value;
   const comment=document.getElementById('cfg-comment').value.trim();
   const address=document.getElementById('cfg-address').value.trim();
+
   const data=previewRows.map((r,i)=>{
     const row=new Array(hdrs.length).fill('');
-    row[0]=custCode;row[1]=isoDate||'';row[4]=orderNo;
-    row[5]=r.tag;row[6]=r.desc;row[8]=r.qty!==''?Number(r.qty):'';
-    row[9]=i===0?comment:'';row[10]=r.rowComment||'';
-    row[14]=wod;row[18]=i===0?custName:'';
-    row[19]=i===0?address:'';row[23]=i===0?city:'';
+    row[0]=custCode; row[1]=isoDate||''; row[4]=orderNo;
+    row[5]=r.tag; row[6]=r.desc; row[8]=r.qty!==''?Number(r.qty):'';
+    row[9]=i===0?comment:''; row[10]=r.rowComment||'';
+    row[14]=wod; row[18]=i===0?custName:'';
+    row[19]=i===0?address:''; row[23]=i===0?city:'';
     return row;
   });
+
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdrs,...data]),'Data');
   return wb;
 }
 
+// ── Download ─────────────────────────────────────────────────────────────────
 function generateExcel() {
   if(!previewRows.length){alert('No rows to export.');return;}
   const fname=document.getElementById('out-name').value.trim()||'PackingList_import.xlsx';
@@ -1172,11 +1343,12 @@ function generateExcel() {
   const globalPO=document.getElementById('cfg-docno').value.trim();
   const allPos=[...new Set([...pos,globalPO].filter(Boolean))];
   const hint=currentType==='inbound'
-    ?`Import via <b>Registers &rarr; Import &rarr; Purchase order</b> in Ongoing WMS.<br><span style="color:var(--muted)">Note: pallet labels (LabelId column) require the Excel import — they cannot be set via API.</span>`
-    :`Import via <b>Order &rarr; Import</b> in Ongoing WMS.`;
-  setStatus('gen-status',`<div class="ok-box">&#10003; <b>${esc(fname)}</b> downloaded — ${previewRows.length} rows${allPos.length?', PO/Order: <b>'+allPos.map(esc).join(', ')+'</b>':''}.<br>${hint}</div>`);
+    ?`Import via <b>Registers → Import → Purchase order</b> in Ongoing WMS.<br><span style="color:var(--muted)">Note: pallet labels (LabelId column) require the Excel import — they cannot be set via API.</span>`
+    :`Import via <b>Order → Import</b> in Ongoing WMS.`;
+  setStatus('gen-status',`<div class="ok-box">✓ <b>${esc(fname)}</b> downloaded — ${previewRows.length} rows${allPos.length?', PO/Order: <b>'+allPos.map(esc).join(', ')+'</b>':''}.<br>${hint}</div>`);
 }
 
+// ── Submit modal ─────────────────────────────────────────────────────────────
 function openSubmitModal() {
   if(!previewRows.length){alert('No rows to submit.');return;}
   const isIn=currentType==='inbound';
@@ -1186,21 +1358,24 @@ function openSubmitModal() {
   const goId=goSel.value;
   const savedU=localStorage.getItem(CRED_USER_KEY)||'Tnix';
   const savedP=localStorage.getItem(CRED_PASS_KEY)||'';
+
   const summaryRows=isIn
     ?`<tr><td>Purchase Order</td><td><b>${esc(docNo||'(not set)')}</b></td></tr>
        <tr><td>Lines</td><td>${previewRows.length}</td></tr>
        <tr><td>ETA</td><td>${esc(document.getElementById('cfg-date').value||'—')}</td></tr>
        <tr><td>Supplier</td><td>${esc(document.getElementById('cfg-supplier').value||'—')}</td></tr>`
-    :(()=>{
+    :(() => {
+      const pos=[...new Set(previewRows.map(r=>r.po).filter(Boolean))];
       const orderNo=docNo;
       return `<tr><td>Order Number</td><td><b>${esc(orderNo||'(not set)')}</b></td></tr>
               <tr><td>Lines</td><td>${previewRows.length}</td></tr>
               <tr><td>Delivery Date</td><td>${esc(document.getElementById('cfg-date').value||'—')}</td></tr>
               <tr><td>Customer</td><td>${esc(document.getElementById('cfg-custcode').value||'—')} ${esc(document.getElementById('cfg-custname').value||'')}</td></tr>`;
     })();
+
   document.getElementById('modal-body').innerHTML=`
     <div class="warn-box" style="margin-bottom:14px">
-      &#9888; This will create real records in <b>Ongoing WMS (${isIn?'Purchase Order':'Outbound Order'})</b>.<br>
+      ⚠ This will create real records in <b>Ongoing WMS (${isIn?'Purchase Order':'Outbound Order'})</b>.<br>
       Goods Owner: <b>${esc(goName)}</b> (ID ${esc(goId)})<br>
       ${isIn?'Note: pallet labels (LabelId) cannot be set via API — download Excel for pallet import.':''}
     </div>
@@ -1212,6 +1387,7 @@ function openSubmitModal() {
     </div>
     <div class="hint" style="margin-top:4px">Stored in browser localStorage — sent only to <code>api.ongoingsystems.se</code>.</div>
     <div id="modal-prog" style="margin-top:12px"></div>`;
+
   document.getElementById('btn-mo').disabled=false;
   document.getElementById('btn-mo').textContent='Submit to Ongoing WMS';
   document.getElementById('modal-actions').innerHTML='<button class="btn-mc" onclick="closeModal()">Cancel</button><button class="btn-mo" id="btn-mo" onclick="confirmSubmit()">Submit to Ongoing WMS</button>';
@@ -1229,11 +1405,14 @@ async function confirmSubmit() {
   localStorage.setItem(CRED_PASS_KEY,pass);
   document.getElementById('btn-mo').disabled=true;
   document.getElementById('modal-actions').querySelector('.btn-mc').disabled=true;
+
   if(currentType==='inbound') await submitPO(user,pass,prog);
   else await submitOrder(user,pass,prog);
+
   document.getElementById('modal-actions').innerHTML='<button class="btn-mc" onclick="closeModal()">Close</button>';
 }
 
+// ── Submit Inbound PO (REST PUT /api/v1/purchaseOrders) ──────────────────────
 async function submitPO(user, pass, prog) {
   const goId=parseInt(document.getElementById('cfg-go').value);
   const docNo=document.getElementById('cfg-docno').value.trim();
@@ -1242,46 +1421,70 @@ async function submitPO(user, pass, prog) {
   const container=document.getElementById('cfg-container').value.trim();
   const remark=document.getElementById('cfg-remark').value.trim();
   const authHdr='Basic '+btoa(unescape(encodeURIComponent(user+':'+pass)));
+
+  // Group rows by PO number (each row's .po, falling back to global docNo)
   const poMap={};
   previewRows.forEach(r=>{const k=r.po||docNo||'(no PO)';(poMap[k]=poMap[k]||[]).push(r);});
   const results=[];
+
   for(const [poNum,rows] of Object.entries(poMap)) {
     prog.innerHTML=`<span class="spin"></span> Submitting PO <b>${esc(poNum)}</b> (${rows.length} lines)…`;
+    const poContainer=rows[0]?.container||container||undefined;
     const body={
-      goodsOwnerId:goId,purchaseOrderNumber:poNum,
-      inDate:inDate?inDate+'T00:00:00':undefined,
-      supplierName:supplier||undefined,containerNumber:container||undefined,remark:remark||undefined,
-      purchaseOrderLines:rows.map((r,i)=>({
-        rowNumber:i+1,
-        article:{articleNumber:r.tag,articleName:r.desc},
-        numberOfItems:r.qty!==''?Number(r.qty):1,
-        comment:r.pallet||undefined,
-        itemWeight:r.wt!==''&&r.wt!=null?Number(r.wt):undefined,
-        itemLength:r.len!==''&&r.len!=null?Number(r.len):undefined,
-        itemWidth:r.wid!==''&&r.wid!=null?Number(r.wid):undefined,
-        itemHeight:r.hgt!==''&&r.hgt!=null?Number(r.hgt):undefined,
+      goodsOwnerId: goId,
+      purchaseOrderNumber: poNum,
+      inDate: inDate?inDate+'T00:00:00':undefined,
+      supplierName: supplier||undefined,
+      containerNumber: poContainer,
+      remark: remark||undefined,
+      purchaseOrderLines: rows.map((r,i)=>({
+        rowNumber: i+1,
+        article: { articleNumber:r.tag, articleName:r.desc },
+        numberOfItems: r.qty!==''?Number(r.qty):1,
+        comment: r.pallet||undefined,
+        itemWeight: r.wt!==''&&r.wt!=null?Number(r.wt):undefined,
+        itemLength: r.len!==''&&r.len!=null?Number(r.len):undefined,
+        itemWidth:  r.wid!==''&&r.wid!=null?Number(r.wid):undefined,
+        itemHeight: r.hgt!==''&&r.hgt!=null?Number(r.hgt):undefined,
       }))
     };
-    body.purchaseOrderLines=body.purchaseOrderLines.map(l=>{Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);return l;});
+    // Remove undefined keys
+    body.purchaseOrderLines=body.purchaseOrderLines.map(l=>{
+      Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);
+      return l;
+    });
     Object.keys(body).forEach(k=>body[k]===undefined&&delete body[k]);
+
     try{
-      const resp=await fetch(API_BASE+'/api/v1/purchaseOrders',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':authHdr},body:JSON.stringify(body)});
-      if(resp.ok){const json=await resp.json().catch(()=>({}));results.push({poNum,ok:true,detail:json.purchaseOrderId?'Ongoing ID: '+json.purchaseOrderId:'Accepted'});}
-      else{const txt=await resp.text().catch(()=>'');results.push({poNum,ok:false,detail:`HTTP ${resp.status} — ${txt.substring(0,140)}`});}
+      const resp=await fetch(API_BASE+'/api/v1/purchaseOrders',{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','Authorization':authHdr},
+        body:JSON.stringify(body)
+      });
+      if(resp.ok){
+        const json=await resp.json().catch(()=>({}));
+        results.push({poNum,ok:true,detail:json.purchaseOrderId?'Ongoing ID: '+json.purchaseOrderId:'Accepted'});
+      }else{
+        const txt=await resp.text().catch(()=>'');
+        results.push({poNum,ok:false,detail:`HTTP ${resp.status} — ${txt.substring(0,140)}`});
+      }
     }catch(err){
       const cors=err instanceof TypeError;
       results.push({poNum,ok:false,cors,detail:cors?'Network/CORS error — download Excel and import manually.':err.message});
     }
   }
-  const rows=results.map(r=>`<tr class="${r.ok?'r-ok':'r-err'}"><td>${r.ok?'&#10003;':'&#10007;'}</td><td><b>${esc(r.poNum)}</b></td><td style="font-size:.76rem">${esc(r.detail)}</td></tr>`).join('');
+
+  const rows=results.map(r=>`<tr class="${r.ok?'r-ok':'r-err'}"><td>${r.ok?'✓':'✗'}</td><td><b>${esc(r.poNum)}</b></td><td style="font-size:.76rem">${esc(r.detail)}</td></tr>`).join('');
   prog.innerHTML=`<table class="sum-tbl"><thead><tr><th></th><th>PO Number</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>`;
+
   const allOk=results.every(r=>r.ok),hasCors=results.some(r=>r.cors);
-  if(allOk)setStatus('gen-status',`<div class="ok-box">&#10003; ${results.length} purchase order(s) created in Ongoing WMS (goods owner ID ${document.getElementById('cfg-go').value}).<br><span style="color:var(--muted)">Pallet labels require Excel import — use "Download Ongoing WMS Import File" above.</span></div>`);
-  else if(hasCors)setStatus('gen-status',`<div class="err-box">&#10007; CORS error — Ongoing API may not allow direct browser requests. Download Excel and import manually.</div>`);
-  else setStatus('gen-status',`<div class="err-box">&#10007; Some submissions failed — see modal for details.</div>`);
-  if(!allOk)document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
+  if(allOk) setStatus('gen-status',`<div class="ok-box">✓ ${results.length} purchase order(s) created in Ongoing WMS (goods owner ID ${document.getElementById('cfg-go').value}).<br><span style="color:var(--muted)">Pallet labels require Excel import — use "Download Ongoing WMS Import File" above.</span></div>`);
+  else if(hasCors) setStatus('gen-status',`<div class="err-box">✗ CORS error — Ongoing API may not allow direct browser requests. Download Excel and import manually.</div>`);
+  else setStatus('gen-status',`<div class="err-box">✗ Some submissions failed — see modal for details.</div>`);
+  if(!allOk) document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
 }
 
+// ── Submit Outbound Order (REST PUT /api/v1/orders) ──────────────────────────
 async function submitOrder(user, pass, prog) {
   const goId=parseInt(document.getElementById('cfg-go').value);
   const orderNo=document.getElementById('cfg-docno').value.trim();
@@ -1293,40 +1496,60 @@ async function submitOrder(user, pass, prog) {
   const comment=document.getElementById('cfg-comment').value.trim();
   const address=document.getElementById('cfg-address').value.trim();
   const authHdr='Basic '+btoa(unescape(encodeURIComponent(user+':'+pass)));
+
   if(!custCode){prog.innerHTML='<span style="color:var(--danger)">Customer Code is required for outbound orders.</span>';document.getElementById('btn-mo').disabled=false;return;}
+
   prog.innerHTML=`<span class="spin"></span> Submitting order <b>${esc(orderNo)}</b> (${previewRows.length} lines)…`;
+
   const body={
-    goodsOwnerId:goId,orderNumber:orderNo,
-    deliveryDate:isoDate?isoDate+'T00:00:00':undefined,
-    orderComment:comment||undefined,
-    wayOfDelivery:wod?{wayOfDeliveryCode:wod}:undefined,
-    consignee:{customerCode:custCode,name:custName||undefined,address:address||undefined,city:city||undefined},
-    orderLines:previewRows.map((r,i)=>({rowNumber:i+1,article:{articleNumber:r.tag,articleName:r.desc},numberOfItems:r.qty!==''?Number(r.qty):1,rowComment:r.rowComment||undefined}))
+    goodsOwnerId: goId,
+    orderNumber: orderNo,
+    deliveryDate: isoDate?isoDate+'T00:00:00':undefined,
+    orderComment: comment||undefined,
+    wayOfDelivery: wod?{wayOfDeliveryCode:wod}:undefined,
+    consignee: {
+      customerCode: custCode,
+      name: custName||undefined,
+      address: address||undefined,
+      city: city||undefined,
+    },
+    orderLines: previewRows.map((r,i)=>({
+      rowNumber: i+1,
+      article: {articleNumber:r.tag, articleName:r.desc},
+      numberOfItems: r.qty!==''?Number(r.qty):1,
+      rowComment: r.rowComment||undefined,
+    }))
   };
   body.orderLines=body.orderLines.map(l=>{Object.keys(l).forEach(k=>l[k]===undefined&&delete l[k]);return l;});
   Object.keys(body).forEach(k=>body[k]===undefined&&delete body[k]);
   if(body.consignee)Object.keys(body.consignee).forEach(k=>body.consignee[k]===undefined&&delete body.consignee[k]);
+
   try{
-    const resp=await fetch(API_BASE+'/api/v1/orders',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':authHdr},body:JSON.stringify(body)});
+    const resp=await fetch(API_BASE+'/api/v1/orders',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','Authorization':authHdr},
+      body:JSON.stringify(body)
+    });
     if(resp.ok){
       const json=await resp.json().catch(()=>({}));
       const detail=json.orderId?'Ongoing order ID: '+json.orderId:'Accepted';
-      prog.innerHTML=`<div class="ok-box" style="margin:0">&#10003; Order <b>${esc(orderNo)}</b> created — ${detail}</div>`;
-      setStatus('gen-status',`<div class="ok-box">&#10003; Outbound order <b>${esc(orderNo)}</b> created in Ongoing WMS (goods owner ID ${goId}).</div>`);
+      prog.innerHTML=`<div class="ok-box" style="margin:0">✓ Order <b>${esc(orderNo)}</b> created — ${detail}</div>`;
+      setStatus('gen-status',`<div class="ok-box">✓ Outbound order <b>${esc(orderNo)}</b> created in Ongoing WMS (goods owner ID ${goId}).</div>`);
     }else{
       const txt=await resp.text().catch(()=>'');
-      prog.innerHTML=`<div class="err-box" style="margin:0">&#10007; HTTP ${resp.status} — ${esc(txt.substring(0,200))}</div>`;
-      setStatus('gen-status',`<div class="err-box">&#10007; Submission failed — see modal. Download Excel and import manually.</div>`);
+      prog.innerHTML=`<div class="err-box" style="margin:0">✗ HTTP ${resp.status} — ${esc(txt.substring(0,200))}</div>`;
+      setStatus('gen-status',`<div class="err-box">✗ Submission failed — see modal. Download Excel and import manually.</div>`);
       document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" style="margin-left:8px" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
     }
   }catch(err){
     const cors=err instanceof TypeError;
-    prog.innerHTML=`<div class="err-box" style="margin:0">${cors?'&#10007; Network/CORS error — Ongoing API may not allow direct browser requests. Download Excel instead.':esc(err.message)}</div>`;
-    setStatus('gen-status',`<div class="err-box">&#10007; API request failed — download Excel and import manually.</div>`);
+    prog.innerHTML=`<div class="err-box" style="margin:0">${cors?'✗ Network/CORS error — Ongoing API may not allow direct browser requests. Download Excel instead.':esc(err.message)}</div>`;
+    setStatus('gen-status',`<div class="err-box">✗ API request failed — download Excel and import manually.</div>`);
     document.getElementById('modal-actions').innerHTML+=`<button class="btn-mo" style="margin-left:8px" onclick="generateExcel();closeModal()">Download Excel Instead</button>`;
   }
 }
 
+// ── Start over ───────────────────────────────────────────────────────────────
 function startOver() {
   docs.length=0;previewRows=[];
   document.getElementById('file-list').innerHTML='';
